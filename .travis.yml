@@ -19,7 +19,5 @@ cache:
     - $HOME/.m2
 
 sudo: false
-
 install: true
-
-script: "mvn clean dependency:list test -Dsort -Dmaven.test.redirectTestOutputToFile=true -B"
+script: "./mvnw clean dependency:list test -Dsort"
