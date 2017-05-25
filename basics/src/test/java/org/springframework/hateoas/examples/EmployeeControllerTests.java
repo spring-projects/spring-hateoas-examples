@@ -36,6 +36,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
+ * How to test the hypermedia-based {@link EmployeeController} with everything else mocked out.
+ *
  * @author Greg Turnquist
  */
 @RunWith(SpringRunner.class)
@@ -50,7 +52,7 @@ public class EmployeeControllerTests {
 	private EmployeeRepository repository;
 
 	@Test
-	public void noop() throws Exception {
+	public void getShouldFetchAHalDocument() throws Exception {
 
 		given(repository.findAll()).willReturn(
 			Arrays.asList(

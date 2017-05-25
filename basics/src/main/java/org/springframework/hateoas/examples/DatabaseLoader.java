@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  * @author Greg Turnquist
  */
 @Component
-public class DatabaseLoader {
+class DatabaseLoader {
 
 	/**
 	 * Use Spring to inject a {@link EmployeeRepository} that can then load data. Since this will run

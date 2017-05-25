@@ -32,13 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Greg Turnquist
  */
 @RestController
-public class EmployeeController {
+class EmployeeController {
 
 	private final EmployeeRepository repository;
 	private final EmployeeResourceAssembler assembler;
 
-	public EmployeeController(EmployeeRepository repository,
-							  EmployeeResourceAssembler assembler) {
+	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler) {
 		
 		this.repository = repository;
 		this.assembler = assembler;
@@ -61,18 +60,18 @@ public class EmployeeController {
 	}
 
 	/**
-	 * Look up a single {@link Employee} and transform into a REST resource using
+	 * Look up a single {@link Employee} and transform it into a REST resource using
 	 * {@link EmployeeResourceAssembler#toResource(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
-	 * See {@link #findAll()} to explain "produces".
+	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
 	 * 
 	 * @param id
 	 */
 	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
-	public ResponseEntity<Resource<Employee>> findOne(@PathVariable String id) {
+	public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
 		return ResponseEntity.ok(
-			assembler.toResource(repository.findOne(Long.valueOf(id))));
+			assembler.toResource(repository.findOne(id)));
 	}
 
 }

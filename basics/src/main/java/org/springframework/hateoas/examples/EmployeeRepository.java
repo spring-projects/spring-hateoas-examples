@@ -18,7 +18,9 @@ package org.springframework.hateoas.examples;
 import org.springframework.data.repository.CrudRepository;
 
 /**
+ * A simple Spring Data {@link CrudRepository} for storing {@link Employee}s.
+ *
  * @author Greg Turnquist
  */
-public interface EmployeeRepository extends CrudRepository<Employee, Long> {
+interface EmployeeRepository extends CrudRepository<Employee, Long> {
 }

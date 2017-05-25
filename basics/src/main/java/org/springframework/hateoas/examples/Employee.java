@@ -48,7 +48,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Employee implements Identifiable<Long> {
+class Employee implements Identifiable<Long> {
 
 	@Id @GeneratedValue
 	private Long id;
