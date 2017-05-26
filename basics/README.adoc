@@ -36,7 +36,7 @@ This domain object includes:
 
 * `@Data` - Lombok annotation to define a mutable value object
 * `@Entity` - JPA annotation to make the object storagable in a classic SQL engine (H2 in this example)
-* `@NoArgsConstructor` - Lombok annotation to create an empty constructor call to appear Jackson.
+* `@NoArgsConstructor` - Lombok annotation to create an empty constructor call to appease Jackson.
 * `@AllArgsConstructor` - Lombok annotation to create an all-arg constructor for certain test scenarios
 * `@JsonIgnoreProperties(ignoreUnknown=true)` - Jackson annotation to ignore unknown attributes when deserializing JSON.
 
@@ -88,7 +88,7 @@ Spring HATEOAS defines a generic `Resource<T>` container that lets store any dom
 add additional links.
 
 IMPORTANT: Spring HATEOAS's `Resource` and `Link` classes are *vendor neutral*. HAL is thrown around a lot, being the
-default mediatype, but the classes you are using can be used to render any mediatype.
+default mediatype, but these classes can be used to render any mediatype.
 
 A common convention is to create a factory used to convert `Employee` objects into `Resource<Employee>` objects. Spring
 HATEOAS provides `SimpleIdentifiableResourceAssembler<T>` as the simplest mechanism to perform these conversions.
@@ -114,11 +114,10 @@ This class has two key properties:
 * The generic type (`Employee`) declares the entity type.
 * The constructor defines the Spring MVC controller (`EmployeeController`) where links are found to turn the entity into a REST resource.
 
-The class is flagged with Spring's `@Component` annotation, flagging it to be automatically hooked into the
+The class is flagged with Spring's `@Component` annotation so that it will be automatically hooked into the
 application context.
 
-
-This is half the battle. This resource assembler is used _in the controller_ to assemble REST resources, as shown in the next section.
+This is half the battle, already solved. This resource assembler is used _in the controller_ to assemble REST resources, as shown in the next section.
 
 == Creating Links
 
@@ -158,31 +157,31 @@ The collection's route is shown below:
 
 [source,java]
 ----
-	/**
-	 * Look up all employees, and transform them into a REST collection resource using
-	 * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
-	 * Spring Web's {@link ResponseEntity} fluent API.
-	 *
-	 * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
-	 * default accept header, which allows XML to get requested first, so "produces"
-	 * forces it to HAL JSON for all clients.
-	 */
-	@GetMapping(value = "/employees", produces = MediaTypes.HAL_JSON_VALUE)
-	public ResponseEntity<Resources<Resource<Employee>>> findAll() {
-		return ResponseEntity.ok(
-			assembler.toResources(repository.findAll()));
+/**
+ * Look up all employees, and transform them into a REST collection resource using
+ * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
+ * Spring Web's {@link ResponseEntity} fluent API.
+ *
+ * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
+ * default accept header, which allows XML to get requested first, so "produces"
+ * forces it to HAL JSON for all clients.
+ */
+@GetMapping(value = "/employees", produces = MediaTypes.HAL_JSON_VALUE)
+public ResponseEntity<Resources<Resource<Employee>>> findAll() {
+	return ResponseEntity.ok(
+		assembler.toResources(repository.findAll()));
 
-	}
+}
 ----
 
-It uses the `EmployeeResourceAssembler` and it's `toResources(Employee)` method to turn a collection of
+It uses the `EmployeeResourceAssembler` and it's `toResources(Iterable<Employee>)` method to turn a collection of
 `Employee` objects into a `Resources<Resource<Employee>>`.
 
 NOTE: `Resources` is Spring HATEOAS's vendor neutral representation of a collection. It has it's
-own collection of links, separate from the links of every member of the collection. That's why the whole
+own set of links, separate from the links of each member of the collection. That's why the whole
 structure is `Resources<Resource<Employee>>` and not `Resources<Employee>`.
 
-To build a single resource, the `/employess/{id}` route is shown below:
+To build a single resource, the `/employees/{id}` route is shown below:
 
 [source,java]
 ----
