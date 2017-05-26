@@ -65,7 +65,7 @@ class EmployeeController {
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
 	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
-	 * 
+	 *
 	 * @param id
 	 */
 	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
