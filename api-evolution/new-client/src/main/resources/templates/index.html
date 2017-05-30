@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Spring HATEOAS Examples - Original Client</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid #999;
+            padding: 0.5rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spring HATEOAS Examples - New Client</h1>
+
+    <p>
+        This is the <b>new client</b>. It can only talk to the <b>new server</b>. If it were to become a REST service
+        as well, we'd have to design a little extra in order to support that as well.
+    </p>
+
+    <table>
+        <thead>
+        <tr>
+            <th>First Name</th><th>Last Name</th><th>Role</th><th>Links</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr th:each="employee : ${employees}">
+                <td th:text="${employee.content.firstName}" />
+                <td th:text="${employee.content.lastName}" />
+                <td th:text="${employee.content.role}" />
+                <td>
+                    <ul>
+                        <li th:each="link : ${employee.links}">
+                            <a th:text="${link.rel}" th:href="${link.href}" />
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <form method="post" th:action="@{/employees}" th:object="${employee}">
+        <input type="text" th:field="*{firstName}" placeholder="Name" />
+        <input type="text" th:field="*{lastName}" placeholder="Name" />
+        <input type="text" th:field="*{role}" placeholder="Role"/>
+        <input type="submit" value="Submit" />
+    </form>
+</body>
+</html>

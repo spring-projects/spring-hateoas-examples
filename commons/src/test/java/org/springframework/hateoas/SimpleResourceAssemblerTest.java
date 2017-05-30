@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.*;
 import java.util.Arrays;
 
 import lombok.Data;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -45,7 +46,7 @@ public class SimpleResourceAssemblerTest {
 		Resources<Resource<Employee>> resources = assembler.toResources(Arrays.asList(new Employee("Frodo")));
 		assertThat(resources.getContent(), hasSize(1));
 		assertThat(resources.getContent(), Matchers.<Resource<Employee>>contains(new Resource(new Employee("Frodo"))));
-		assertThat(resources.getLinks(), is(Matchers.<Link>empty()));
+		MatcherAssert.assertThat(resources.getLinks(), is(Matchers.<Link>empty()));
 
 		assertThat(resources.getContent().iterator().next(), is(new Resource(new Employee("Frodo"))));
 	}

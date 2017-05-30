@@ -4,15 +4,22 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-hateoas-examples-basics</artifactId>
-	<name>Spring HATEOAS - Basics</name>
-	<packaging>jar</packaging>
+	<artifactId>spring-hateoas-examples-api-evolution</artifactId>
+	<name>Spring HATEOAS - API Evolution</name>
+	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>org.springframework.hateoas.examples</groupId>
 		<artifactId>spring-hateoas-examples</artifactId>
 		<version>1.0.0.BUILD-SNAPSHOT</version>
 	</parent>
+
+	<modules>
+		<module>original-server</module>
+		<module>original-client</module>
+		<module>new-server</module>
+		<module>new-client</module>
+	</modules>
 
 	<dependencies>
 		<dependency>
@@ -21,14 +28,5 @@
 			<version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 
 </project>
