@@ -79,6 +79,7 @@ interface EmployeeRepository extends CrudRepository<Employee, Long> {
 This interface extends Spring Data Commons' `CrudRepository`, inheriting a collection of create/replace/update/delete (CRUD)
 operations.
 
+[[converting-entities-to-resources]]
 == Converting Entities to Resources
 
 In REST, the "thing" being linked to is a *resource*. Resources provide both information as well as information on _how_ to

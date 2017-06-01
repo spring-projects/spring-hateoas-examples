@@ -18,22 +18,14 @@ package org.springframework.hateoas.examples;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.springframework.hateoas.Identifiable;
-
 /**
  * @author Greg Turnquist
  */
 @Data
 @NoArgsConstructor
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	private Long id;
 	private String name;
 	private String role;
-
-	Employee(String name, String role) {
-		
-		this.name = name;
-		this.role = role;
-	}
 }

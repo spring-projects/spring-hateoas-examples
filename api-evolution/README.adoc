@@ -1,0 +1,440 @@
+= Spring HATEOAS - API Evolution Example
+
+This guide shows a valuable example of using Spring HATEOAS. It illustrates how to evolve your API while maintaining backward compatible.
+This is valuable because it reduces the need to https://www.infoq.com/articles/roy-fielding-on-versioning[version your API], a concept not suitable for REST services.
+
+This guide also assumes you have already checked out link:../basics[Basics].
+
+Start with a very simple example, a payroll system that tracks employees. Create a server and a client. Then,
+evolve the server while ensuring the original client can talk to the new one. Finally, upgrade the client and
+take advantage of the new features provided by the server.
+
+NOTE: This example uses https://projectlombok.org[Project Lombok] to reduce writing Java code.
+
+== Creating the Original Server
+
+=== Defining Your Original Domain
+
+We all must start somewhere. So imagine you created an employee representation like this:
+
+[source,java]
+----
+@Data
+@NoArgsConstructor
+@Entity
+class Employee implements Identifiable<Long> {
+
+	@Id @GeneratedValue
+	private Long id;
+	private String name;
+	private String role;
+
+	Employee(String name, String role) {
+
+		this.name = name;
+		this.role = role;
+	}
+}
+----
+
+This domain object captures an employee's name and role, along with a unique identifier for the data store.
+
+* `@Data` is a Lombok annotation to turn it into a mutable value type.
+* `@NoArgsConstructor` creates an empty constructor, helping Jackson serialize.
+* `@Entity` is a JPA annotation allowing us to store it in the H2 in-memory data store used in this example.
+
+IMPORTANT: Why is there no `@JsonIgnoreProperties(ignoreUnknown = true)` annotation as shown in link:../basics/src/main/java/org/springframework/hateoas/examples/Employee.java#L50[the basics example]?
+Truth be told, it's not needed. Spring HATEOAS's `HypermediaSupportBeanDefinitionRegistrar` automatically disables `DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES`,
+so you don't have to include it in your POJO definition. The *basics* example puts it in to clarify the importance of ignoring unneeded fields.
+
+=== Accessing Data
+
+With this domain object, your original server now needs a Spring Data JPA repository:
+
+[source,java]
+----
+interface EmployeeRepository extends CrudRepository<Employee, Long> {
+}
+----
+
+By extending Spring Data Common's `CrudRepository` and plugging in our domain object and it's id's type, we gain access to a fleet
+of CRUD operations.
+
+=== Converting Entities to Resources
+
+A key component in using Spring HATEOAS to build hypermedia is transforming objects into *resources*. To do that you
+need a *resource assembler* as shown in <<../basics/README.adoc#converting-entities-to-resources,basics>>.
+
+=== Creating a Controller
+
+The link:../basics/src/main/java/org/springframework/hateoas/examples/EmployeeController.java[basics example] shows how to define the two most important links:
+
+. one for the collection (*/employees*)
+. one for an individual entity (*/employees/1*)
+
+That's not enough to operate. You also need to create new employees as well as navigate from the root.
+
+Start by adding a *root node* for clients to start from. The idea is to find relevant collections:
+
+[source,java]
+----
+@GetMapping(value = "/", produces = MediaTypes.HAL_JSON_VALUE)
+public ResourceSupport root() {
+
+	ResourceSupport rootResource = new ResourceSupport();
+
+	rootResource.add(
+		linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
+		linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+
+	return rootResource;
+}
+----
+
+Since the root node only needs to serve links, creating a bare `ResourceSupport` object is quite sufficient.
+
+* Add a link to `EmployeeController.root` for a proper *self* link
+* It also adds a link to `EmployeeController.findAll` and names it *employees*.
+
+From here, the client can navigate (we'll see how a little further down) to the collection of employees, as shown in *basics*.
+From there, we need to add the ability to create new employees:
+
+[source,java]
+----
+@PostMapping("/employees")
+public ResponseEntity<Resource<Employee>> newEmployee(@RequestBody Employee employee) {
+
+	Employee savedEmployee = repository.save(employee);
+
+	return ResponseEntity
+		.created(linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).toUri())
+		.body(assembler.toResource(savedEmployee));
+}
+----
+
+This API can now process *PUT* requests, deserializing JSON found in the HTTP request body into an `Employee` record.
+
+From there, it will save it using `EmployeeRepository.save`, getting back a record that includes the id.
+
+Finally, Spring MVC's `ResponseEntity.created` factory method is used to:
+
+* Find the new employee's URI and load it into the response's *Location* header.
+* Convert the newly saved `Employee` into a resource using the *assembler* and return that in the response body.
+
+NOTE: There's no need to show the test data loaded up in link:original-server/src/main/java/org/springframework/hateoas/examples/InitDatabase.java[InitDatabase.java] class. Just take a peek!
+
+=== Running a Server on a Different Port
+
+No need to show the rest of the server here. It's vanilla Spring Boot. But one key thing, since this example runs both
+the server _and_ the client on the same machine, is to run the server on a different port.
+
+To do so, just add `src/main/resources/application.yml` like this:
+
+[source,yml]
+----
+server:
+  port: 9000
+----
+
+This will fire the thing up on port 9000.
+
+== Creating a RESTful client
+
+With our original server built, serving up employee data, it's time to switch focus to the original client.
+
+In this scenario, you'll build a web app with Thymeleaf templates, but retrieves some of its data from the server app you just built.
+
+This requires a couple extra dependencies:;
+
+* spring-boot-starter-thymeleaf - for Thymeleaf templating
+* json-path - you'll see why shortly
+
+=== Creating the Client's Domain Object
+
+Despite what you may think, it's best that the client have its _own_ version of the `Employee`:
+
+[source,java]
+----
+@Data
+@NoArgsConstructor
+class Employee {
+
+	private Long id;
+	private String name;
+	private String role;
+}
+----
+
+There are many advantages:
+
+* Decouples the client from the server.
+* Clients may not want ALL the fields.
+* This client doesn't talk to a data store, so no JPA annotations.
+* This client isn't used to form links, to no need to implement the `Identifiable<T>` interface.
+* This client isn't used to fashion test data (yet), so no need for special constructors.
+
+All in all, it's enough to give it the empty constructor so Jackson can handle serializing/deserializing data over the wire.
+
+The real gold is in the `HomeController` used to talk to the server:
+
+[source,java]
+----
+@Controller
+public class HomeController {
+
+	private static final String REMOTE_SERVICE_ROOT_URI = "http://localhost:9000";
+
+	private final RestTemplate rest;
+
+	public HomeController(RestTemplate restTemplate) {
+		this.rest = restTemplate;
+	}
+	...
+}
+----
+
+This controller, used to construct HTML pages through Thymeleaf, needs to know the root URI of the remote
+service. So in this example, it is hard coded into place.
+
+WARNING: For fault tolerant production systems, hard coded URIs are NOT recommended. Instead, use something like
+Spring Cloud Netflix and it's Eureka/Ribbon features to allow https://spring.io/guides/gs/service-registration-and-discovery/[service discovery] and https://spring.io/guides/gs/client-side-load-balancing/[load balanced calls].
+
+Parts of the controller must also perform REST calls, so we request a `RestTemplate` in the constructor call, allowing Spring to provide it.
+
+To construct a listing of all employees, check out the following controller method:
+
+[source,java]
+----
+/**
+ * Get a listing of ALL {@link Employee}s by querying the remote services' root URI, and then
+ * "hopping" to the {@literal employees} rel.
+ *
+ * NOTE: Also create a form-backed {@link Employee} object to allow creating a new entry with
+ * the Thymeleaf template.
+ *
+ * @param model
+ * @return
+ * @throws URISyntaxException
+ */
+@GetMapping
+public String index(Model model) throws URISyntaxException {
+
+	Traverson client = new Traverson(new URI(REMOTE_SERVICE_ROOT_URI), MediaTypes.HAL_JSON);
+	Resources<Resource<Employee>> employees = client
+		.follow("employees")
+		.toObject(new ResourcesType<Resource<Employee>>(){});
+
+	model.addAttribute("employee", new Employee());
+	model.addAttribute("employees", employees);
+
+	return "index";
+}
+----
+
+Presuming you already understand Spring MVC, let's focus on the RESTful bits.
+
+* `Traverson` is used to start from the root node (*REMOTE_SERVICE_ROOT_URI*) and "hop" to *employees*.
+Then it fetches an object, and transforms it into Spring HATEOAS's vendor neutral `Resources<Resource<Employee>>` structure.
+* Using this, we are able to construct a `Model` object for the template.
+** An *employee* object is created to hold an empty, form-backed bean.
+** *employees* is loaded up with the entire Spring HATEOAS structure, allowing the template to use what bits it wants.
+
+The method then returns the name of the template to render (`index`).
+
+NOTE: `Traverson` is what requires having *json-path* on the classpath.
+
+It isn't necessary to post ALL of the Thymeleaf template `index.html`, but the critical parts are here:
+
+[source,html]
+----
+<table>
+    <thead>
+    <tr>
+        <th>Name</th><th>Role</th><th>Links</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr th:each="employee : ${employees}">
+            <td th:text="${employee.content.name}" />
+            <td th:text="${employee.content.role}" />
+            <td>
+                <ul>
+                    <li th:each="link : ${employee.links}">
+                        <a th:text="${link.rel}" th:href="${link.href}" />
+                    </li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
+----
+This shows the employee data being served up inside an HTML table.
+
+* `th:each="employee : ${employees}"` lets your iterate over each one.
+* `th:text="${employee.content.name}"` navigates the `Resource<Employee>` structure (remmeber, you're iterating over each entry of `Resources<>`).
+* `${employee.links}` gives each entry access to a Spring HATEOAS `Link`.
+* `<a th:text="${link.rel}" th:href="${link.href}" />` lets you show the end user each link, both name and URI.
+
+Just below the HTML table is a form for creating new employees:
+
+[source,html]
+----
+<form method="post" th:action="@{/employees}" th:object="${employee}">
+    <input type="text" th:field="*{name}" placeholder="Name" />
+    <input type="text" th:field="*{role}" placeholder="Role"/>
+    <input type="submit" value="Submit" />
+</form>
+----
+
+This is pure Thymeleaf. It takes the form-backed bean you just saw (`th:object="${employee}"`)
+and maps the HTML inputs onto its fields.
+
+WARNING: You _could_ put the remote service's *employees* URI, but that would subvert standard web security tactics.
+Instead, it's best that all POSTs get sent back to the client's server piece, and from there, forwarded to the remote service (just below).
+
+With the client put together, the last step is to forward *POST /employees* calls to the remote service:
+
+[source,java]
+----
+/**
+ * Instead of putting the creation link from the remote service in the template (a security concern),
+ * have a local route for {@literal POST} requests. Gather up the information, and form a remote call,
+ * using {@link Traverson} to fetch the {@literal employees} {@link Link}.
+ *
+ * Once a new employee is created, redirect back to the root URL.
+ *
+ * @param employee
+ * @return
+ * @throws URISyntaxException
+ */
+@PostMapping("/employees")
+public String newEmployee(@ModelAttribute Employee employee) throws URISyntaxException {
+
+	Traverson client = new Traverson(new URI(REMOTE_SERVICE_ROOT_URI), MediaTypes.HAL_JSON);
+	Link employeesLink = client
+		.follow("employees")
+		.asLink();
+
+	this.rest.postForEntity(employeesLink.expand().getHref(), employee, Employee.class);
+
+	return "redirect:/";
+}
+----
+
+Again, you could hard code the path to */employees* on the remote service, but that would subvert REST. Instead,
+you can use Traverson to open a connection to the remote service's root URI and "hop" to *employees*. But instead
+of asking for the data, you just want the link.
+
+Using the link, `RestTemplate.postForEntity` is used to forward the data submitted in the client. Finally, a
+`redirect:/` is issued to Spring MVC, telling it to navigate back to the root page.
+
+NOTE: It's true that *POST /employees* on the remote service will give you back an `Employee` object wrapped in HAL,
+but for this example, it's not needed. Can you imagine a scenario where this information could be put to use while
+redirecting the page back to home?
+
+== Evolving the Server
+
+Let's assume someone decides to update the server. This can be done in a way that doesn't cause existing clients to break.
+
+Looking into link:new-server[new-server], the updated `Employee` domain object can be seen:
+
+[source,java]
+----
+@Data
+@NoArgsConstructor
+@Entity
+class Employee implements Identifiable<Long> {
+
+	@Id @GeneratedValue
+	private Long id;
+	private String firstName;
+	private String lastName;
+	private String role;
+
+	Employee(String firstName, String lastName, String role) {
+
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.role = role;
+	}
+	...
+}
+----
+
+The data changes to be made are shown here:
+
+* The single *name* field has been replaced with *firstName* and *lastName*.
+* The constructor call has also been adjusted to support this.
+
+This is the part that would typically break things and force either a SOAP or CORBA update to be issued
+for all clients. In REST, the goal is to _not_ break everyone, but instead provide a smoother experience
+
+The first step is to provide a "virtual" attribute. Since the original client expects a *name* field, create one!
+
+[source,java]
+----
+/**
+ * Just merge {@literal firstName} and {@literal lastName} together.
+ *
+ * @return
+ */
+public String getName() {
+	return this.firstName + " " + this.lastName;
+}
+----
+
+This simple getter method concatenates *firstName* and *lastName* together. And Jackson will automatically turn it into a *name* field.
+
+[source,javascript]
+----
+{
+  "firstName" : "Frodo",
+  "lastName" : "Baggins",
+  "name" : "Frodo Baggins",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:9000/employees/1"
+    },
+    "employees" : {
+      "href" : "http://localhost:9000/employees"
+    }
+  }
+}
+----
+
+When the client receives this document over the wire, it will deserialize it into its own `Employee` domain object, throwing away
+the *firstName* and *lastName* fields.
+
+NOTE: Concerned about sending the same information twice? Don't be. By adding just a few bytes, the cost of maintaining _two_ versions of this API
+has been eliminated. If performance of a few bytes is hypercritical to the business needs at hand, then REST may not be the answer for you.
+
+So what happens when the original client attempts to create a new employee? You have to be able to handle that. Naturally,
+you must code the setter method for this virtual *name* field:
+
+[source,java]
+----
+/**
+ * Split things up, and assign the first token to {@literal firstName} with everything else to {@literal lastName}.
+ *
+ * @param wholeName
+ */
+public void setName(String wholeName) {
+
+	String[] parts = wholeName.split(" ");
+	this.firstName = parts[0];
+	if (parts.length > 1) {
+		this.lastName = StringUtils.arrayToDelimitedString(Arrays.copyOfRange(parts, 1, parts.length), " ");
+	} else {
+		this.lastName = "";
+	}
+}
+----
+
+This method contains the gory details of splitting up a name into parts, putting the first into *firstName*, and putting
+the rest into *lastName*.
+
+From here on, the link:new-client[client can also evolve] and take advantage of the extra fields.
+
+WARNING: The example code for that doesn't depict the new-client talking to the old-server.
+
+This is but a simple example of making clients and services support each other through typical breaking changes.

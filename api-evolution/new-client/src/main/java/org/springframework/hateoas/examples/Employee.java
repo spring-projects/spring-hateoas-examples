@@ -18,8 +18,6 @@ package org.springframework.hateoas.examples;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.springframework.hateoas.Identifiable;
-
 /**
  * An updated domain object on the client side. It doesn't need all the backward compatible bits that the new
  * server needs (unless this becomes a service of its own).
@@ -28,17 +26,10 @@ import org.springframework.hateoas.Identifiable;
  */
 @Data
 @NoArgsConstructor
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	private Long id;
 	private String firstName;
 	private String lastName;
 	private String role;
-
-	Employee(String firstName, String lastName, String role) {
-
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.role = role;
-	}
 }

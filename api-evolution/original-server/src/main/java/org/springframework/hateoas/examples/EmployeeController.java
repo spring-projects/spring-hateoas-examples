@@ -47,7 +47,7 @@ class EmployeeController {
 	public ResourceSupport root() {
 
 		ResourceSupport rootResource = new ResourceSupport();
-		
+
 		rootResource.add(
 			linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
@@ -64,7 +64,7 @@ class EmployeeController {
 	public ResponseEntity<Resource<Employee>> newEmployee(@RequestBody Employee employee) {
 
 		Employee savedEmployee = repository.save(employee);
-		
+
 		return ResponseEntity
 			.created(linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).toUri())
 			.body(assembler.toResource(savedEmployee));

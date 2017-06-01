@@ -52,8 +52,8 @@ class Employee implements Identifiable<Long> {
 	}
 
 	/**
-	 * Just merged {@literal firstName} and {@literal lastName} together.
-	 * 
+	 * Just merge {@literal firstName} and {@literal lastName} together.
+	 *
 	 * @return
 	 */
 	public String getName() {
