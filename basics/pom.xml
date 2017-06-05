@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-hateoas-examples-basics</artifactId>
-	<name>Spring HATEOAS - Basics</name>
+	<name>Spring HATEOAS - Examples - Basics</name>
 	<packaging>jar</packaging>
 
 	<parent>

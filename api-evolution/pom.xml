@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-hateoas-examples-api-evolution</artifactId>
-	<name>Spring HATEOAS - API Evolution</name>
+	<name>Spring HATEOAS - Examples - API Evolution</name>
 	<packaging>pom</packaging>
 
 	<parent>
