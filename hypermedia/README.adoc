@@ -1,0 +1,570 @@
+= Spring HATEOAS - Hypermedia Example
+
+This guide shows a more detailed foray into linking resources with hypermedia. It includes automated links, custom ones,
+and retaining legacy links to support older clients.
+
+Before proceeding, have you read these yet?
+
+. link:../basics[Spring HATEOAS - Basic Example]
+. link:../api-evolution[Spring HATEOAS - API Evolution Example]
+
+You may wish to read them first before reading this one.
+
+NOTE: This example uses https://projectlombok.org[Project Lombok] to reduce writing Java code.
+
+== Defining Your Domain
+
+This example takes off where Basics and API Evolution end: an employee payroll system. Only this time, you'll introduce
+a new domain: *managers*.
+
+You'll explore how to create create REST representations for a manager and tie it into employees.
+
+For starters, here is the basic definition:
+
+[source,java]
+----
+@Data
+@Entity
+@NoArgsConstructor
+class Manager implements Identifiable<Long> {
+
+	@Id @GeneratedValue
+	private Long id;
+	private String name;
+
+	/**
+	 * To break the recursive, bi-directional interface, don't serialize {@literal employees}.
+	 */
+	@JsonIgnore
+	@OneToMany(mappedBy = "manager")
+	private List<Employee> employees = new ArrayList<>();
+
+	Manager(String name) {
+		this.name = name;
+	}
+}
+----
+
+This is very similar to `Employee`:
+
+* Uses the same `@Data` Lombok annotation to reduce boilerplate in defining a mutable value object.
+* They are stored in a JPA data store using `@Entity`, `@Id`, and `@GeneatedValue`.
+* Has a `@NoArgsConstructor` to support Jackson's serializers.
+
+But it contains a new aspect: a 1-to-many relationship with `Employee` in the form a `List<Employee>`.
+
+This domain object initializes the field with an empty list to avoid NPEs. The JPA `@OneToMany` annotation indicates
+that the relationship between `Manager` and `Employee` is stored in the database tables in the `Employee` entity's
+*manager* property, i.e. the manager's primary key will be stored as a foreign key in the *EMPLOYEE* table.
+
+WARNING: Bi-directional relationships can be modeled in JPA, but you must carefully handle this. Jackson tends to
+navigate as far as possible when serializing, so you have to tell it to stop with the `@JsonIgnore` directive. Otherwise,
+it will generate a stack overflow exception when hopping Manager -> Employee -> Manager -> etc.
+
+A handy constructor is also added to support link:src/main/java/org/springframework/hateoas/examples/DatabaseLoader.java[loading the database]
+with sample data.
+
+A corresponding Spring Data JPA repository is defined:
+
+[source,java]
+----
+interface ManagerRepository extends CrudRepository<Manager, Long> {
+}
+----
+
+To round things out, you need to make some updates to the `Employee` domain object:
+
+[source,java]
+----
+@Data
+@Entity
+@NoArgsConstructor
+class Employee implements Identifiable<Long> {
+
+	@Id @GeneratedValue
+	private Long id;
+	private String name;
+	private String role;
+
+	/**
+	 * To break the recursive, bi-directional relationship, don't serialize {@literal manager}.
+	 */
+	@JsonIgnore
+	@OneToOne
+	private Manager manager;
+
+	Employee(String name, String role, Manager manager) {
+
+		this.name = name;
+		this.role = role;
+		this.manager = manager;
+	}
+}
+----
+
+This is very similar to what you saw in *Basics*, except that now there is a 1-to-1 JPA relationship in the *manager* field.
+
+The constructor call has also been updated. Finally, the same stack overflow is blocked from this end by also putting a `@JsonIgnore`
+Jackson annotation on the *manager* field.
+
+With these changes in place, you can now define a `ResourceAssembler` for the `Manager`:
+
+[source,java]
+----
+@Component
+class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manager> {
+
+	ManagerResourceAssembler() {
+		super(ManagerController.class);
+	}
+}
+----
+
+If you follow the same paradigm of extending Spring HATEOAS's `SimpleIdentifiableResourceAssembler` and applying the `Manager` type,
+you can easily inherit links for */managers* and */managers/{id}*
+
+Before we go any further, we need to define those links!
+
+[source,java]
+----
+@RestController
+class ManagerController {
+
+	private final ManagerRepository repository;
+	private final ManagerResourceAssembler assembler;
+
+	ManagerController(ManagerRepository repository, ManagerResourceAssembler assembler) {
+
+		this.repository = repository;
+		this.assembler = assembler;
+	}
+
+	/**
+	 * Look up all managers, and transform them into a REST collection resource using
+	 * {@link ManagerResourceAssembler#toResources(Iterable)}. Then return them through
+	 * Spring Web's {@link ResponseEntity} fluent API.
+	 *
+	 * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
+	 * default accept header, which allows XML to get requested first, so "produces"
+	 * forces it to HAL JSON for all clients.
+	 */
+	@GetMapping(value = "/managers", produces = MediaTypes.HAL_JSON_VALUE)
+	ResponseEntity<Resources<Resource<Manager>>> findAll() {
+		return ResponseEntity.ok(
+			assembler.toResources(repository.findAll()));
+
+	}
+
+	/**
+	 * Look up a single {@link Manager} and transform it into a REST resource using
+	 * {@link ManagerResourceAssembler#toResource(Object)}. Then return it through
+	 * Spring Web's {@link ResponseEntity} fluent API.
+	 *
+	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
+	 *
+	 * @param id
+	 */
+	@GetMapping(value = "/managers/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
+		return ResponseEntity.ok(
+			assembler.toResource(repository.findOne(id)));
+	}
+}
+----
+
+This controller should look familar, since it's almost identical to `EmployeeController` as seen in link:../api-evolution[API Evolution].
+You have simply swapped */employees* with */managers* and plugged in `ManagerRepository` and `ManagerResourceAssembler`.
+
+IMPORTANT: It's not a requirement to use a `ResourceAssembler`. But having one place to define all links for a given domain object
+ensures a consistent representation.
+
+With the basic routes defined, you could say we have an operational REST service. But it's not fleshed out very well. To truly
+power up the hypermedia and serve clients, you need to add links _between_ the relevant domain types.
+
+NOTE: Up until this point, we've been using the term "domain types" or "domain objects". This is lingo found in Domain Driven Design.
+What you are building are *REST resources* and how the various mediatypes they are represented in. The paradigm of REST is
+to construct resources that contain both data for the client to consume as well as controls to navigate to related data.
+
+The first link to navigate from a `Manager` resource to its related `Employee` resources would be a */managers/{id}/employees*
+route:
+
+.ManagerController
+[source,java]
+----
+@RestController
+class ManagerController {
+
+	...
+	
+	/**
+	 * Find an {@link Employee}'s {@link Manager} based upon employee id. Turn it into a context-based link.
+	 *
+	 * @param id
+	 * @return
+	 */
+	@GetMapping(value = "/managers/{id}/employees", produces = MediaTypes.HAL_JSON_VALUE)
+	public ResponseEntity<Resources<Resource<Employee>>> findEmployees(@PathVariable long id) {
+		return ResponseEntity.ok(
+			assembler.toResources(repository.findByManagerId(id)));
+	}
+}
+----
+
+We've added another route, but how are we getting the data? Oh yeah, we need to add another finder!
+
+[source,java]
+----
+interface ManagerRepository extends CrudRepository<Manager, Long> {
+
+	/**
+	 * Navigate through the JPA relationship to find a {@link Manager} based on an {@link Employee}'s {@literal id}.
+	 *
+	 * @param id
+	 * @return
+	 */
+	Manager findByEmployeesId(Long id);
+}
+----
+
+With Spring Data, we can define a new finder _just by writing it's method signature!_ This custom finder will navigate by property
+and find the first `Manager` who has an `Employee` with an *id* matching the parameter.
+
+NOTE: Navigation by property is analogous to writing `select MANAGER.* from MANAGER join EMPLOYEE on MANAGER.PK = EMPLOYEE.FK where EMPLOYEE.PK == :id`.
+It makes it super simple to navigate over JPA relationships and find what we need.
+
+This newly minted route needs to be added to every `Manager` representation we render. To do that, we need to make an alteration
+to `ManagerResourceAssembler`:
+
+[source,java]
+----
+@Component
+class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manager> {
+
+	...
+
+	/**
+	 * Retain default links provided by {@link SimpleIdentifiableResourceAssembler}, but add extra ones to each {@link Manager}.
+	 *
+	 * @param resource
+	 */
+	@Override
+	protected void addLinks(Resource<Manager> resource) {
+		/**
+		 * Retain default links.
+		 */
+		super.addLinks(resource);
+
+		// Add custom link to find all managed employees
+		resource.add(linkTo(methodOn(EmployeeController.class).findEmployees(resource.getContent().getId())).withRel("employees"));
+	}
+
+	...
+}
+
+----
+
+`SimpleIdentifiableResourceAssembler` has methods to alter a resource representation for single items or collections. It has pre-baked
+renderings to create a self link to a single item as well as a link back to the collection. In this code, you are extending that
+method and invoking `super.addLinks()` in order to include those links. Then you add the link to the manager's employees you just created.
+
+IMPORTANT: You can either _add_ to the links defined by `SimpleIdentifiableResourceAssembler` as shown, or you can totally replace them by _not_
+invoking `super.addLinks()`. Your choice.
+
+There is a corresponding combination of a route/repository finder/assembler to allow an employee to find his or her manager. It's left as an exericise
+for you to discover it in `EmployeeController`, `EmployeeRepository`, and `EmployeeResourceAssembler`.
+
+== Augmenting Representations
+
+Some critics of REST will point to certain toolkits or coded solutions and argue that "hopping" can be inefficient. A common example is
+a relational set of tables that through 3NF (3rd Normal Form) split up data between a parent/child relationship. In essence, part of the data
+is in the parent table, part in the child table. The parent table's data is shown along with a link to navigate to the child table's data.
+
+This is a false comparison, because REST wholely supports merging data if it makes sense. In DDD, such items are referred to as *aggregates*.
+Nothing about a REST resource is confined to what the rules of 3NF written forty years ago dictates. That can simply be shortfall of certain
+toolkits (but not Spring HATEOAS!)
+
+What if you wanted a detailed `Employee` representation that included the `Manager` details? No problem! Just model it.
+
+[source,java]
+----
+@Value
+@JsonPropertyOrder({"id", "name", "role", "manager"})
+public class EmployeeWithManager {
+
+	@JsonIgnore
+	private final Employee employee;
+
+	public Long getId() {
+		return this.employee.getId();
+	}
+
+	public String getName() {
+		return this.employee.getName();
+	}
+
+	public String getRole() {
+		return this.employee.getRole();
+	}
+
+	public String getManager() {
+		return this.employee.getManager().getName();
+	}
+
+}
+----
+
+This _immutable_ value object (thanks to Lombok's `@Value` annotation) is initialized with an `Employee` object. It defines
+how it gets rendered through various getter methods. It also subtly does _not_ render the `Employee` object itself.
+
+IMPORTANT: `Employee` and `Manager` both have a *name* field. With combined representations, there has to be agreement on how these
+two fields will appear. In this case, `Employee.name` is kept and `Manager.name` is turned into *manager*.
+
+To support this, we can write the corresponding route in `EmployeeController`:
+
+[source,java]
+----
+@GetMapping(value = "/employees/detailed", produces = MediaTypes.HAL_JSON_VALUE)
+public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedEmployees() {
+
+	return ResponseEntity.ok(
+		employeeWithManagerResourceAssembler.toResources(
+			StreamSupport.stream(repository.findAll().spliterator(), false)
+				.map(EmployeeWithManager::new)
+				.collect(Collectors.toList())));
+}
+
+@GetMapping(value = "/employees/{id}/detailed", produces = MediaTypes.HAL_JSON_VALUE)
+public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
+
+	Employee employee = repository.findOne(id);
+
+	return ResponseEntity.ok(
+		employeeWithManagerResourceAssembler.toResource(
+			new EmployeeWithManager(employee)));
+}
+----
+
+This shows both a collection of "detailed" employees as well as a single one. The collection fetches all employees, uses a Java 8
+stream to convert each `Employee` into an `EmployeeWithManager`, and wraps it into a Spring HATEOAS `Resources` collection.
+
+The single employee version does the corresponding transformation against a single `Employee`.
+
+To support building REST resources, you also need a `ResourceAssembler` for `EmployeeWithManager`. This should appear very
+familiar by now:
+
+[source,java]
+----
+@Component
+class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<EmployeeWithManager> {
+
+	/**
+	 * Define links to add to every individual {@link Resource}.
+	 *
+	 * @param resource
+	 */
+	@Override
+	protected void addLinks(Resource<EmployeeWithManager> resource) {
+
+		resource.add(linkTo(methodOn(EmployeeController.class).findDetailedEmployee(resource.getContent().getId())).withSelfRel());
+		resource.add(linkTo(methodOn(EmployeeController.class).findOne(resource.getContent().getId())).withRel("summary"));
+		resource.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
+	}
+
+	/**
+	 * Define links to add to the {@link Resources} collection.
+	 *
+	 * @param resources
+	 */
+	@Override
+	protected void addLinks(Resources<Resource<EmployeeWithManager>> resources) {
+
+		resources.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withSelfRel());
+		resources.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+		resources.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
+		resources.add(linkTo(methodOn(RootController.class).root()).withRel("root"));
+	}
+}
+----
+
+This has a handful of differences from the `ResourceAssembler` objects you've built up to this point:
+
+* Since the routes are different than traditional */employees* and */employees/{id}*, it makes no sense to use `SimpleIdentifiableResourceAssembler<T>`.
+ So instead, you want to fall back to `SimpleResourceAssembler<EmployeeWithManager>`, in which NO links are defined out of the box.
+* Because there are no defined routes, you are in full control.
+** `addLinks(Resource<EmployeeWithManager> resource)` defines links for single items
+** `addLinks(Resources<Resource<EmployeeWithManager>> resources)` defines links for collections
+
+In this case, single `EmployeeWithManager` items include a self link to itself, a hop to it's parallel record that only has `Employee` info known as *summary*,
+and a link to the detailed collection. To avoid semantic confusion, this is called *detailedEmployees* given *employees* is the common reference to
+a collection of summary `Employee` records.
+
+It also makes sense to add links from the other existing REST resources to this detailed `EmployeeWithManager`.
+
+WARNING: Even though `addLinks(Resources<Resource<EmployeeWithManager>> resources)` gives you access to a single item's `Resource<T>` object,
+ it is recommended to NOT manipulate individual item links this way. Instead, use the other method.
+
+Is this the _only_ way to display a detailed record? Not at all. Spring MVC supports request parameters, so it's not that difficult
+to code something like this:
+
+[source,java]
+----
+@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+public ResponseEntity<?> findOne(@PathVariable long id,
+		@RequestParam(value = "detailed", required = false,
+		defaultValue = false) boolean detailed) {
+
+	if (detailed) {
+		Employee employee = repository.findOne(id);
+
+		return ResponseEntity.ok(
+			employeeWithManagerResourceAssembler.toResource(
+				new EmployeeWithManager(employee)));
+	} else {
+		return ResponseEntity.ok(
+			assembler.toResource(repository.findOne(id)));
+	}
+}
+----
+
+This type of solution allows serving two different representations from the same URI based on an optional `?detailed=true`
+parameter.
+
+There are tradeoffs either way, but this option lends itself to supporting existing routes that you may already have.
+
+To find the other places where detailed `EmployeeWithManager` links have been added, inspect all the `ResourceAssembler` objects
+in the example's code base.
+
+== Don't Forget the Root URI
+
+In order to "start at the top" and hop, you must include a `RootController`:
+
+[source,java]
+----
+@RestController
+class RootController {
+
+	@GetMapping("/")
+	ResponseEntity<ResourceSupport> root() {
+
+		ResourceSupport resourceSupport = new ResourceSupport();
+
+		resourceSupport.add(linkTo(methodOn(RootController.class).root()).withSelfRel());
+		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
+		resourceSupport.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
+
+		return ResponseEntity.ok(resourceSupport);
+	}
+
+}
+----
+
+Because there is no data at the top, just links, return back a `ResourceSupport` is perfect. This allows defining all the top links.
+
+And it's easy to go into the various `ResourceAssemblers` and add a link back to the top as needed. It's up to you to see which
+bits of hypermedia serve such a link.
+
+
+== Legacy Routes
+
+What if you started with one set of routes and migrated things to another set? This is the type of scenario that drives people screaming
+to version their APIs.
+
+Instead of shouting "don't version APIs" from the rooftops, and appealing to the authority of Roy Fielding, it's better to see
+how it's not that hard to support both old and new routes.
+
+For this example, assume that before the `Manager` entity and it's `ManagerController` existed, there was a `Supervisor` with a
+matching `SupervisorController`. It had similar data but fewer links. A bit more RPC-like. If the original `Supervisor` entity
+was gone, we can a DTO to represent the old format based on `Manager` like this:
+
+[source,java]
+----
+/**
+ * Legacy representation. Contains older format of data. Fewer links because hypermedia at the time was an after
+ * thought.
+ *
+ * @author Greg Turnquist
+ */
+@Value
+@JsonPropertyOrder({"id", "name", "employees"})
+class Supervisor {
+
+	@JsonIgnore
+	private final Manager manager;
+
+	public Long getId() {
+		return this.manager.getId();
+	}
+
+	public String getName() {
+		return this.manager.getName();
+	}
+
+	public List<String> getEmployees() {
+		return manager.getEmployees().stream()
+			.map(employee -> employee.getName() + "::" + employee.getRole())
+			.collect(Collectors.toList());
+	}
+}
+----
+
+This representation assumes old record had:
+
+* Supervisor's *id*, *name* and a somewhat sloppy display of employee's name and role.
+* It's powered by the new `Manager` object, so no need to store multiple copies of data.
+* The `Manager` itself is not rendered thanks to the `@JsonIgnore` annotation.
+
+To honor the old route (*/supervisors/{id}*), create a new controller:
+
+[source,java]
+----
+/**
+ * Represent an older controller that has since been replaced with {@link ManagerController}.
+ * This controller is used to provide legacy routes, i.e. backwards compatibility.
+ *
+ * @author Greg Turnquist
+ */
+@RestController
+public class SupervisorController {
+
+	private final ManagerController controller;
+
+	public SupervisorController(ManagerController controller) {
+		this.controller = controller;
+	}
+
+	@GetMapping(value = "/supervisors/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	public ResponseEntity<Resource<Supervisor>> findOne(@PathVariable Long id) {
+
+		Resource<Manager> managerResource = controller.findOne(id).getBody();
+		Resource<Supervisor> supervisorResource = new Resource<>(
+			new Supervisor(managerResource.getContent()),
+			managerResource.getLinks());
+
+		return ResponseEntity.ok(supervisorResource);
+	}
+}
+----
+
+In this example, the assumption is that there was a route for individual supervisors, but not a link for a collection.
+This controller has that route, and serves up a `Resource<Supervisor>` record. But instead of fetching the data directly,
+ it leverages the `ManagerController`.
+
+Is that a good idea or a bad idea?
+
+Again, there are tradeoffs. This example is meant to illustrate other options. In this case, leveraging `ManagerController`
+allows all links to be generated courtesy of the `ManagerResourceAssembler`. When a `ResponseEntity<Resource<Manager>>` object
+is returned by the controller, its wrapped REST resource is extracted by Spring MVC's `getBody()` method.
+
+A new `Supervisor` REST resource is constructed by injecting the `Manager` into a `Supervisor` DTO. The provided links are
+then copied into that `Resource<Supervisor>` object.
+
+Hence, this controller will respond to calls for */supervisors/{id}*, but provide links onto the new system should the client
+want to gracefully start migrating.
+
+IMPORTANT: This example also assumes the clients can handle new links as long as the legacy ones are also there. For
+a different scenario, that assumption can be adjusted.
+
+With this amount of linking between related objects and DTOs, it's easy to see how Spring HATEOAS can be used to model
+a link-driven API. And with the flexible nature of REST, more links can be added in the future along with additional representations.
+As long as the existing links are maintained, clients can have a much easier path of migration.

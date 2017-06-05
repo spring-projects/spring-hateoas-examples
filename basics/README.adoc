@@ -277,3 +277,5 @@ The rest of the assertions are commented out, but you can read it in the source 
 
 NOTE: This is not the only way to assert the results. See Spring Framework reference docs and Spring HATEOAS
 test cases for more examples.
+
+For the next step in Spring HATEOAS, you may wish to read link:../api-evolution[Spring HATEOAS - API Evolution Example].

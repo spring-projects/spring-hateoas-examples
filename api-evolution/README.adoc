@@ -3,7 +3,11 @@
 This guide shows a valuable example of using Spring HATEOAS. It illustrates how to evolve your API while maintaining backward compatible.
 This is valuable because it reduces the need to https://www.infoq.com/articles/roy-fielding-on-versioning[version your API], a concept not suitable for REST services.
 
-This guide also assumes you have already checked out link:../basics[Basics].
+Before proceeding, have you read these yet?
+
+. link:../basics[Spring HATEOAS - Basic Example]
+
+You may wish to read them first before reading this one.
 
 Start with a very simple example, a payroll system that tracks employees. Create a server and a client. Then,
 evolve the server while ensuring the original client can talk to the new one. Finally, upgrade the client and
@@ -438,3 +442,5 @@ From here on, the link:new-client[client can also evolve] and take advantage of 
 WARNING: The example code for that doesn't depict the new-client talking to the old-server.
 
 This is but a simple example of making clients and services support each other through typical breaking changes.
+
+For the next step in Spring HATEOAS, you may wish to read link:../hypermedia[Spring HATEOAS - Hypermedia Example].
