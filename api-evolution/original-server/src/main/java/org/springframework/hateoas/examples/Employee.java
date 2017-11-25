@@ -15,12 +15,15 @@
  */
 package org.springframework.hateoas.examples;
 
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Optional;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import org.springframework.hateoas.Identifiable;
 
@@ -28,7 +31,7 @@ import org.springframework.hateoas.Identifiable;
  * @author Greg Turnquist
  */
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
 class Employee implements Identifiable<Long> {
 
@@ -41,5 +44,9 @@ class Employee implements Identifiable<Long> {
 		
 		this.name = name;
 		this.role = role;
+	}
+
+	public Optional<Long> getId() {
+		return Optional.ofNullable(this.id);
 	}
 }

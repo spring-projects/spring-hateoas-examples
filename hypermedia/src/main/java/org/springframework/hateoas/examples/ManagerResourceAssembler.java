@@ -44,8 +44,11 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 		 */
 		super.addLinks(resource);
 
-		// Add custom link to find all managed employees
-		resource.add(linkTo(methodOn(EmployeeController.class).findEmployees(resource.getContent().getId())).withRel("employees"));
+		resource.getContent().getId()
+			.ifPresent(id -> {
+				// Add custom link to find all managed employees
+				resource.add(linkTo(methodOn(EmployeeController.class).findEmployees(id)).withRel("employees"));
+			});
 	}
 
 	/**

@@ -47,12 +47,15 @@ class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Empl
 		 */
 		super.addLinks(resource);
 
-		// Add additional links
-		resource.add(linkTo(methodOn(ManagerController.class).findManager(resource.getContent().getId())).withRel("manager"));
-		resource.add(linkTo(methodOn(EmployeeController.class).findDetailedEmployee(resource.getContent().getId())).withRel("detailed"));
+		resource.getContent().getId()
+			.ifPresent(id -> {
+				// Add additional links
+				resource.add(linkTo(methodOn(ManagerController.class).findManager(id)).withRel("manager"));
+				resource.add(linkTo(methodOn(EmployeeController.class).findDetailedEmployee(id)).withRel("detailed"));
 
-		// Maintain a legacy link to support older clients not yet adjusted to the switch from "supervisor" to "manager".
-		resource.add(linkTo(methodOn(SupervisorController.class).findOne(resource.getContent().getId())).withRel("supervisor"));
+				// Maintain a legacy link to support older clients not yet adjusted to the switch from "supervisor" to "manager".
+				resource.add(linkTo(methodOn(SupervisorController.class).findOne(id)).withRel("supervisor"));
+			});
 	}
 
 	/**

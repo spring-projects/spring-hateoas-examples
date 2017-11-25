@@ -71,8 +71,11 @@ class EmployeeController {
 	 */
 	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
 	public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
-		return ResponseEntity.ok(
-			assembler.toResource(repository.findOne(id)));
+
+		return repository.findById(id)
+			.map(assembler::toResource)
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
 	}
 
 	/**
@@ -100,10 +103,10 @@ class EmployeeController {
 	@GetMapping(value = "/employees/{id}/detailed", produces = MediaTypes.HAL_JSON_VALUE)
 	public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
 
-		Employee employee = repository.findOne(id);
-
-		return ResponseEntity.ok(
-			employeeWithManagerResourceAssembler.toResource(
-				new EmployeeWithManager(employee)));
+		return repository.findById(id)
+			.map(EmployeeWithManager::new)
+			.map(employeeWithManagerResourceAssembler::toResource)
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
 	}
 }

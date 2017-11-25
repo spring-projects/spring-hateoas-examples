@@ -15,10 +15,10 @@
  */
 package org.springframework.hateoas.examples;
 
+import lombok.Value;
+
 import java.util.List;
 import java.util.stream.Collectors;
-
-import lombok.Value;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -37,7 +37,9 @@ class Supervisor {
 	private final Manager manager;
 
 	public Long getId() {
-		return this.manager.getId();
+
+		return this.manager.getId()
+			.orElseThrow(() -> new RuntimeException("Couldn't find anything"));
 	}
 
 	public String getName() {

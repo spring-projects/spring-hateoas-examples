@@ -65,8 +65,11 @@ class ManagerController {
 	 */
 	@GetMapping(value = "/managers/{id}", produces = MediaTypes.HAL_JSON_VALUE)
 	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
-		return ResponseEntity.ok(
-			assembler.toResource(repository.findOne(id)));
+
+		return repository.findById(id)
+			.map(assembler::toResource)
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
 	}
 
 	/**

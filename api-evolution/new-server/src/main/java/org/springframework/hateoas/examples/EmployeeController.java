@@ -65,14 +65,20 @@ class EmployeeController {
 
 		Employee savedEmployee = repository.save(employee);
 
-		return ResponseEntity
-			.created(linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).toUri())
-			.body(assembler.toResource(savedEmployee));
+		return savedEmployee.getId()
+			.map(id -> ResponseEntity
+				.created(linkTo(methodOn(EmployeeController.class).findOne(id)).toUri())
+				.body(assembler.toResource(savedEmployee)))
+			.orElse(ResponseEntity.notFound().build());
 	}
 
 	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
-	public Resource<Employee> findOne(@PathVariable Long id) {
-		return assembler.toResource(repository.findOne(id));
+	public ResponseEntity<Resource<Employee>> findOne(@PathVariable Long id) {
+
+		return repository.findById(id)
+			.map(assembler::toResource)
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
 	}
 
 }

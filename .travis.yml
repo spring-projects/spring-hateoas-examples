@@ -11,7 +11,6 @@ addons:
 env:
   matrix:
     - PROFILE=non-existant
-    - PROFILE=spring5
     - PROFILE=spring5-next
 
 cache:

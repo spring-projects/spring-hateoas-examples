@@ -15,14 +15,15 @@
  */
 package org.springframework.hateoas.examples;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import org.springframework.hateoas.Identifiable;
 import org.springframework.util.StringUtils;
@@ -49,6 +50,10 @@ class Employee implements Identifiable<Long> {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.role = role;
+	}
+
+	public Optional<Long> getId() {
+		return Optional.ofNullable(this.id);
 	}
 
 	/**

@@ -33,7 +33,9 @@ public class EmployeeWithManager {
 	private final Employee employee;
 	
 	public Long getId() {
-		return this.employee.getId();
+		
+		return this.employee.getId()
+			.orElseThrow(() -> new RuntimeException("Couldn't find anything."));
 	}
 
 	public String getName() {
