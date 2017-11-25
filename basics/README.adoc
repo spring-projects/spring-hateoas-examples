@@ -14,7 +14,7 @@ The cornerstone of any example is the domain object:
 ----
 @Data
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Employee implements Identifiable<Long> {
@@ -36,7 +36,7 @@ This domain object includes:
 
 * `@Data` - Lombok annotation to define a mutable value object
 * `@Entity` - JPA annotation to make the object storagable in a classic SQL engine (H2 in this example)
-* `@NoArgsConstructor` - Lombok annotation to create an empty constructor call to appease Jackson.
+* `@NoArgsConstructor(PRIVATE)` - Lombok annotation to create an empty constructor call to appease Jackson, but which is private and not usable to our app's code.
 * `@AllArgsConstructor` - Lombok annotation to create an all-arg constructor for certain test scenarios
 * `@JsonIgnoreProperties(ignoreUnknown=true)` - Jackson annotation to ignore unknown attributes when deserializing JSON.
 

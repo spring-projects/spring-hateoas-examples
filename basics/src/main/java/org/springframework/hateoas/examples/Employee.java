@@ -15,13 +15,14 @@
  */
 package org.springframework.hateoas.examples;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import org.springframework.hateoas.Identifiable;
 
@@ -45,7 +46,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @Data
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Employee implements Identifiable<Long> {
