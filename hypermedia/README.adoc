@@ -48,7 +48,7 @@ class Manager implements Identifiable<Long> {
 This is very similar to `Employee`:
 
 * Uses the same `@Data` Lombok annotation to reduce boilerplate in defining a mutable value object.
-* They are stored in a JPA data store using `@Entity`, `@Id`, and `@GeneatedValue`.
+* They are stored in a JPA data store using `@Entity`, `@Id`, and `@GeneratedValue`.
 * Has a `@NoArgsConstructor` to support Jackson's serializers.
 
 But it contains a new aspect: a 1-to-many relationship with `Employee` in the form a `List<Employee>`.
@@ -186,13 +186,13 @@ What you are building are *REST resources* and how the various mediatypes they a
 to construct resources that contain both data for the client to consume as well as controls to navigate to related data.
 
 The first link to navigate from a `Manager` resource to its related `Employee` resources would be a */managers/{id}/employees*
-route:
+route. Since a controller that yields employee objects would be found in the `EmployeeController`, we need to make the following alterations:
 
-.ManagerController
+.EmployeeController
 [source,java]
 ----
 @RestController
-class ManagerController {
+class EmployeeController {
 
 	...
 	
@@ -214,22 +214,17 @@ We've added another route, but how are we getting the data? Oh yeah, we need to 
 
 [source,java]
 ----
-interface ManagerRepository extends CrudRepository<Manager, Long> {
+interface EmployeeRepository extends CrudRepository<Employee, Long> {
 
-	/**
-	 * Navigate through the JPA relationship to find a {@link Manager} based on an {@link Employee}'s {@literal id}.
-	 *
-	 * @param id
-	 * @return
-	 */
-	Manager findByEmployeesId(Long id);
+	List<Employee> findByManagerId(Long id);
+
 }
 ----
 
 With Spring Data, we can define a new finder _just by writing it's method signature!_ This custom finder will navigate by property
-and find the first `Manager` who has an `Employee` with an *id* matching the parameter.
+and find a list of employees pointed at the chosen manager id.
 
-NOTE: Navigation by property is analogous to writing `select MANAGER.* from MANAGER join EMPLOYEE on MANAGER.PK = EMPLOYEE.FK where EMPLOYEE.PK == :id`.
+NOTE: Navigation by property is analogous to writing `select EMPLOYEE.* from EMPLOYEE join MANAGER on MANAGER.PK = EMPLOYEE.FK where MANAGER.PK == :id`.
 It makes it super simple to navigate over JPA relationships and find what we need.
 
 This newly minted route needs to be added to every `Manager` representation we render. To do that, we need to make an alteration
@@ -271,7 +266,7 @@ IMPORTANT: You can either _add_ to the links defined by `SimpleIdentifiableResou
 invoking `super.addLinks()`. Your choice.
 
 There is a corresponding combination of a route/repository finder/assembler to allow an employee to find his or her manager. It's left as an exericise
-for you to discover it in `EmployeeController`, `EmployeeRepository`, and `EmployeeResourceAssembler`.
+for you to discover it in `ManagerController`, `ManagerRepository`, and `EmployeeResourceAssembler`.
 
 == Augmenting Representations
 
@@ -280,7 +275,7 @@ a relational set of tables that through 3NF (3rd Normal Form) split up data betw
 is in the parent table, part in the child table. The parent table's data is shown along with a link to navigate to the child table's data.
 
 This is a false comparison, because REST wholely supports merging data if it makes sense. In DDD, such items are referred to as *aggregates*.
-Nothing about a REST resource is confined to what the rules of 3NF written forty years ago dictates. That can simply be shortfall of certain
+Nothing about a REST resource is confined by the rules of 3NF, written forty years ago. That can simply be shortfall of certain
 toolkits (but not Spring HATEOAS!)
 
 What if you wanted a detailed `Employee` representation that included the `Manager` details? No problem! Just model it.
@@ -459,11 +454,10 @@ class RootController {
 }
 ----
 
-Because there is no data at the top, just links, return back a `ResourceSupport` is perfect. This allows defining all the top links.
+Because there is no data at the top, just links, returning back a `ResourceSupport` is perfect. This allows defining all the top links.
 
 And it's easy to go into the various `ResourceAssemblers` and add a link back to the top as needed. It's up to you to see which
 bits of hypermedia serve such a link.
-
 
 == Legacy Routes
 
@@ -475,7 +469,7 @@ how it's not that hard to support both old and new routes.
 
 For this example, assume that before the `Manager` entity and it's `ManagerController` existed, there was a `Supervisor` with a
 matching `SupervisorController`. It had similar data but fewer links. A bit more RPC-like. If the original `Supervisor` entity
-was gone, we can a DTO to represent the old format based on `Manager` like this:
+was gone, we can add a DTO to represent the old format based on `Manager` like this:
 
 [source,java]
 ----
@@ -548,7 +542,7 @@ public class SupervisorController {
 
 In this example, the assumption is that there was a route for individual supervisors, but not a link for a collection.
 This controller has that route, and serves up a `Resource<Supervisor>` record. But instead of fetching the data directly,
- it leverages the `ManagerController`.
+it leverages the `ManagerController`.
 
 Is that a good idea or a bad idea?
 
