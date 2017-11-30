@@ -17,6 +17,9 @@ package org.springframework.hateoas;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.hateoas.core.EvoInflectorRelProvider;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
@@ -34,17 +37,17 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> exte
 	/**
 	 * A {@link RelProvider} to look up names of links as options for resource paths.
 	 */
-	private final RelProvider relProvider;
+	@Getter private final RelProvider relProvider;
 
 	/**
 	 * A {@link Class} depicting the {@link Identifiable}'s type.
 	 */
-	private final Class<?> resourceType;
+	@Getter private final Class<?> resourceType;
 
 	/**
 	 * Default base path as empty.
 	 */
-	private String basePath = "";
+	@Getter @Setter private String basePath = "";
 
 	/**
 	 * Default a assembler based on Spring MVC controller, resource type, and {@link RelProvider}. With this combination
@@ -124,14 +127,4 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> exte
 	private String getPrefix() {
 		return getBasePath().isEmpty() ? "" : getBasePath() + "/";
 	}
-
-	public String getBasePath() {
-		return this.basePath;
-	}
-
-	public void setBasePath(String basePath) {
-		this.basePath = basePath;
-	}
-
-
 }
