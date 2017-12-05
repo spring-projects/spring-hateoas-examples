@@ -15,3 +15,6 @@ We have separate folders for each of these:
 * link:api-evolution[API Evolution] - Upgrade an existing REST resource
 * link:hypermedia[Hypermedia] - Create hypermedia-driven REST resources, linking them together, and supporting older links.
 * link:affordances[Affordances] - Create richer hypermedia controls using more complex hypermedia formats
+
+NOTE: The master branch tracks Spring HATEOAS 1.0, based upon Spring Boot 2 + Spring Framework 5.
+To see examples depicted against the 0.x branch (Spring 4.x) visit the https://github.com/spring-projects/spring-hateoas-examples/tree/0.x[0.x branch].
