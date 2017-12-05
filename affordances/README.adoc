@@ -112,10 +112,8 @@ class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Empl
 	protected void addLinks(Resource<Employee> resource) {
 
 		resource.getContent().getId()
-			.ifPresent(id -> {
-				resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel()
-					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, id))));
-			});
+			.ifPresent(id -> resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, id)))));
 
 		resource.add(getCollectionLinkBuilder().withRel(this.getRelProvider().getCollectionResourceRelFor(this.getResourceType())));
 	}
@@ -440,42 +438,8 @@ This augments the same REST controller with a *GET* operation for an individual 
 to update/edit.
 
 Take your team to read both flows. The key part you must define, is the corresponding `EmployeeResourceAssembler.toResource(Employee)` method.
-In the heart of that method, is its `addLinks(Resource<Employee> resource)` method:
 
-[source,java]
-----
-@Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
-
-	...
-
-	/**
-	 * Define links to add to every {@link Resource}.
-	 *
-	 * @param resource
-	 */
-	@Override
-	protected void addLinks(Resource<Employee> resource) {
-
-		resource.getContent().getId()
-			.ifPresent(id -> resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel()
-				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, id)))));
-
-		resource.add(getCollectionLinkBuilder().withRel(this.getRelProvider().getCollectionResourceRelFor(this.getResourceType())));
-	}
-
-	...
-}
-----
-
-In this situation, you are taking an individual `Resource<Employee>`, extracting the contents (i.e. the `Employee` itself), grabbing
-its `Optional` *id*, and if present, creating a *self* link to it. Again, because `Employee` implements `Identifiable`, `slash(Employee)`
-is able to extract the *id* field to form a proper link. This defines the *GET* endpoint as a Spring HATEOAS `Link`.
-
-Using this *self* link, you then add an affordance to the controller's `updateEmployee` method. Spring HATEOAS's Affordances API
-is able to inspect the Spring MVC annotations and extract information to render a HAL-FORMS endpoint.
-
-If you restart the application and ping `/employees/1`, you can see an individual entry:
+If you ping `/employees/1`, you can see an individual entry:
 
 [source,javascript]
 ----
