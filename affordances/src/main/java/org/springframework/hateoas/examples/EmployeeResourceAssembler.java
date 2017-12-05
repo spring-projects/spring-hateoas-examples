@@ -46,10 +46,8 @@ class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Empl
 	protected void addLinks(Resource<Employee> resource) {
 
 		resource.getContent().getId()
-			.ifPresent(id -> {
-				resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel()
-					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, id))));
-			});
+			.ifPresent(id -> resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, id)))));
 
 		resource.add(getCollectionLinkBuilder().withRel(this.getRelProvider().getCollectionResourceRelFor(this.getResourceType())));
 	}
