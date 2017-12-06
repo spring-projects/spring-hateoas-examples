@@ -1,6 +1,7 @@
 = Spring HATEOAS - Affordances Example
 
-This guide shows the opportunities to build hypermedia that http://amundsen.com/blog/archives/1109[affords] operations using https://rwcbook.github.io/hal-forms/[HAL-FORMS].
+This guide shows the opportunities to build hypermedia that http://amundsen.com/blog/archives/1109[affords] operations
+using https://rwcbook.github.io/hal-forms/[HAL-FORMS].
 
 Before proceeding, have you read these yet?
 
@@ -14,28 +15,53 @@ NOTE: This example uses https://projectlombok.org[Project Lombok] to reduce writ
 
 == Building "affordances"
 
-For starters, what is an *affordance*? It's what the hypermedia lets you _do_. With a HAL document, you are provided with data and links, but nothing else.
+For starters, what is an *affordance*? Doing a little archeology, Mike Admundsen, a REST advocate, has
+http://amundsen.com/blog/archives/1109[an article detailing the word's origins], going back at least to 1986:
 
-This is the beauty of REST. By not having one megaspec, REST is able to adjust and adapt by adopting new mediatypes. So far, we've seen HAL, a lightweight
-mediatype that inludes data and links. However, HAL doesn't illustrate what can be done with links. It's possible to use content negotation against
-the links to see what REST verbs are supported, but even with that discovery, we still wouldn't know all the characteristics of a resource's properties.
+[verse, The Ecological Approach to Visual Perception (Gibson)]
+The affordances of the environment are what it offers ... what it provides or furnishes, either for good or ill.
+The verb 'to afford' is found in the dictionary, but the noun 'affordance' is not. I have made it up (page 126).
 
-HAL-FORMS, an extension of HAL, attempts to bridge this gap. It supports the HAL concept of data + links, but introduces another element, *$$_templates$$*.
-*$$_templates$$* make it possible to show all the operations possible as the attributes needed for each operation.
+It then appeared in a psychology paper in 1988:
+
+[verse, The Design|Psychology of Everyday Things (Norman)]
+...the term affordance refers to the perceived and actual properties of the thing, primarily those fundamental properties
+that determine just how the thing could possibly be used. (pg 9)
+
+Finally, it can be found in none other than one of Roy Fielding's presentations on hypermedia in 2008:
+
+[verse, Slide presention on REST (Fielding)]
+When I say Hypertext, I mean the simultaneous presentation of information and controls such that the information becomes
+the affordance through which the user obtains choices and selects actions (slide #50).
+
+In all these situations, "affordance" refers to the available actions provided by the surrounding environment. In the
+context of REST, these are actions detailed by the hypermedia. With a HAL document, you are provided very simple affordances.
+The links are shown but nothing else about them. What you can do with the links and what it takes to interact with them
+is not detailed.
+
+We can use content negotation to discover what HTTP verbs are supported. And we can take a shot at supplying properties
+based on existing data records. But the beauty of REST is that by not having a single megaspec, you can adjust and adapt
+by adopting new mediatypes. HAL has been well received, but perhaps there is something better?
+
+HAL-FORMS, an extension of HAL, attempts to bridge this gap. It supports HAL's lightweight of concept of data and links,
+but introduces another element, *_templates*. *_templates* make it possible to show all the operations possible as well as
+the attributes needed for each operation.
+
+The following bits of code show how to use Spring HATEOAS's Affordances API to produce HAL-FORMS documents.
 
 == Defining Your Domain
 
-This example takes off where Basics and API Evolution end: an employee payroll system. Only this time, you will create hypermedia-driven operations in the form of *templates*.
+This example takes off where Basics and API Evolution end: an employee payroll system.
 
-For starters, here is the basic definition:
+Here is the basic definition:
 
 [source,java]
 ----
-Data
+@Data
 @Entity
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;
@@ -52,10 +78,6 @@ class Employee implements Identifiable<Long> {
 		this.lastName = lastName;
 		this.role = role;
 	}
-
-	public Optional<Long> getId() {
-		return Optional.ofNullable(this.id);
-	}
 }
 ----
 
@@ -69,95 +91,9 @@ interface EmployeeRepository extends CrudRepository<Employee, Long> {
 }
 ----
 
-From here, we need to build a resource assembler.
+This barebones repository provides standard Spring Data CRUD operations.
 
-First of all, we need to extend `SimpleIdentifiableResourceAssembler` and hook it to `Employee`:
-
-[source,java]
-----
-@Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
-
-	/**
-	 * Link the {@link Employee} domain type to the {@link EmployeeController} using this
-	 * {@link SimpleIdentifiableResourceAssembler} in order to generate both {@link org.springframework.hateoas.Resource}
-	 * and {@link org.springframework.hateoas.Resources}.
-	 */
-	EmployeeResourceAssembler() {
-		super(EmployeeController.class);
-	}
-
-	...
-}
-----
-
-This links the domain type of `Employee` to the Spring MVC controller (you'll build further down) `EmployeeController`. This makes it possible to
-build links.
-
-Next you need to define the links for a single resource `Employee` (denoted by Spring HATEOAS's `Resource<Employee>`):
-
-[source,java]
-----
-@Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
-
-	...
-
-	/**
-	 * Define links to add to every {@link Resource}.
-	 *
-	 * @param resource
-	 */
-	@Override
-	protected void addLinks(Resource<Employee> resource) {
-
-		resource.getContent().getId()
-			.ifPresent(id -> resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel()
-				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, id)))));
-
-		resource.add(getCollectionLinkBuilder().withRel(this.getRelProvider().getCollectionResourceRelFor(this.getResourceType())));
-	}
-	...
-}
-----
-
-A link is built by looking up the `getCollectionLinkBuilder()` to find the collection name (using Spring HATEOAS's `RelProvider` to turn `Employee` into `employees`),
-followed by a slash ("/"), and the content of the `Resource<Employee>`. Because this resource implements `Identifiable`, Spring
-HATEOAS know how to get the `id` of the resource. This URI is converted into a Spring HATEOAS *self* `Link` through `withSelfRel()`.
-
-When it comes to HAL documents, this is all we need. HAL is based on data combined with simple links.
-
-Affordances is about chaining related links together to support richer mediatypes. In this case, we have HAL-FORMS support. This means
-we can connect the *GET* link to its related *PUT* link using the `andAffordance(afford(methodOn(...))`.
-
-The `methodOn()` API works just like the other examples show. But the `afford()` operation, based on web-specific technology (in this
-case Spring MVC), is able to look up details about the endpoint and flesh out the *_templates* section of a HAL-FORMS document.
-
-Similarly, you need to link the aggregate *GET* link to the corresponding *POST* link. See below:
-
-[source,java]
-----
-@Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
-
-	...
-	/**
-	 * Define links to add to {@link Resources} collection.
-	 *
-	 * @param resources
-	 */
-	@Override
-	protected void addLinks(Resources<Resource<Employee>> resources) {
-		resources.add(getCollectionLinkBuilder().withSelfRel()
-			.andAffordance(afford(methodOn(EmployeeController.class).newEmployee(null))));
-	}
-}
-----
-
-This code uses the same `getCollectionBuilder()` to point to the collection (`employees`) and connect to the controller's `newEmployee`
-Spring MVC method.
-
-So you want to round this out by defining the controller.
+Next, you define a REST controller:
 
 [source,java]
 ----
@@ -165,24 +101,21 @@ So you want to round this out by defining the controller.
 class EmployeeController {
 
 	private final EmployeeRepository repository;
-	private final EmployeeResourceAssembler assembler;
 
-	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler) {
-
+	EmployeeController(EmployeeRepository repository) {
 		this.repository = repository;
-		this.assembler = assembler;
 	}
 
 	...
 }
 ----
 
-For starters, you can declare a controller like this:
+This controller has these characteristics:
 
 * `@RestController` makes the entire controller render responses as direct JSON and not rendered templates.
-* Injects `EmployeeRepository` and `EmployeeResourceAssembler` through constructor injection.
+* Injects `EmployeeRepository` through constructor injection.
 
-Next, you need to define endpoints for the aggregate collection:
+Next, you need to define Spring MVC endpoints for the aggregate collection:
 
 [source,java]
 ----
@@ -193,17 +126,32 @@ class EmployeeController {
 
 	@GetMapping("/employees")
 	ResponseEntity<Resources<Resource<Employee>>> findAll() {
-		return ResponseEntity.ok(
-			assembler.toResources(repository.findAll()));
+
+		List<Resource<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
+			.map(employee -> new Resource<>(employee,
+				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
+					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
+					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
+				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+			))
+			.collect(Collectors.toList());
+
+		return ResponseEntity.ok(new Resources<>(employeeResources,
+			linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).newEmployee(null)))));
 	}
 
 	@PostMapping("/employees")
 	ResponseEntity<?> newEmployee(@RequestBody Employee employee) {
 
-		return repository.save(employee).getId()
-			.map(this::findOne)
-			.map(HttpEntity::getBody)
-			.flatMap(ResourceSupport::getId)
+		Employee savedEmployee = repository.save(employee);
+
+		return new Resource<>(savedEmployee,
+			linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, savedEmployee.getId())))
+				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(savedEmployee.getId()))),
+			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+		).getId()
 			.map(Link::getHref)
 			.map(href -> {
 				try {
@@ -220,16 +168,117 @@ class EmployeeController {
 }
 ----
 
-This fragment of the controller shows:
+Look at these controller details:
 
-* A *GET* call for the aggregate collection is defined. It uses the repository's `findAll()` method and transforms it into a `Resources<Resource<Employee>>`
-using the `EmployeeResourceAssembler`.
-* A *POST* call for creating new employees is also defined, on the same URI. `@RequestBody` tells Spring MVC to deserialize the request body into an `Employee` object,
-which is then sent through the repository's `save()` operation. From there, you grab the `Optional` *id*
+* A *GET* call for the aggregate collection is laid out. It uses the repository's `findAll()` method and transforms it
+into a `Resources<Resource<Employee>>`.
+* A *POST* call for creating new employees is also defined, on the same URI. `@RequestBody` tells Spring MVC to deserialize
+the request body into an `Employee` object, which is then sent through the repository's `save()` operation. From there,
+it's wrapped as a `Resource` with links added to itself and to the aggregate root. Finally a `Location` response header
+* Buried in both endpoints is the new `.andAffordance()` API. Instead of `linkTo()`, you instead use the `afford()` API
+to show related information.
 
-The premise is that the *POST* endpoint is related to the *GET* endpoint. In other words, the URI at `/employees` services a *GET* call while _also affording_ a *POST* call.
+Affordances is about chaining related links together to support richer mediatypes. In this case, we have HAL-FORMS support. This means
+we can connect the *GET* link to its related *POST* link using the `andAffordance(afford(methodOn(...))`. A given link can
+also connect to multiple affordances. That's why this example also shows linking to the `deleteEmployee` endpoint as well.
 
-To get this operational, you must do one additional step--reconfigure hypermedia. By default, Spring Boot sets things up for HAL. To switch to HAL-FORMS, you need to create this:
+The `methodOn()` API works just like the other examples show. But the `afford()` operation, based on web-specific technology (in this
+case Spring MVC), is able to look up details about the endpoint and flesh out the *_templates* section of a HAL-FORMS document.
+
+The premise is that the *POST* endpoint and the *DELETE* endpoint are related to the *GET* endpoint. In other words, the
+URI at `/employees` services a *GET* call while _also affording_ a *POST* call and a *DELETE* call. And with the Affordances
+API, it captures the important details found in the related Spring MVC endpoint. When fetching a list of employees, there
+are two sets of links, the links for each individual entry along with the aggregate links.
+
+In the aggregate links, you can see a *self* link to the collection, but connected, i.e. afforded to the `newEmployee()`
+endpoint. For each individual employee in the collection, there is a *self* link to itself along with an affordance to
+the `updateEmployee()` endpoint, that you'll define next.
+
+Check it out below:
+
+[source,java]
+----
+@RestController
+class EmployeeController {
+
+	...
+
+	@GetMapping("/employees/{id}")
+	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+
+		return repository.findById(id)
+			.map(employee -> new Resource<>(employee,
+				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
+					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
+					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
+				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+			))
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
+	}
+
+	@PutMapping("/employees/{id}")
+	ResponseEntity<?> updateEmployee(@RequestBody Employee employee, @PathVariable long id) {
+
+		Employee employeeToUpdate = employee;
+		employeeToUpdate.setId(id);
+
+		Employee updatedEmployee = repository.save(employeeToUpdate);
+
+		return new Resource<>(updatedEmployee,
+			linkTo(methodOn(EmployeeController.class).findOne(updatedEmployee.getId())).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, updatedEmployee.getId())))
+				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(updatedEmployee.getId()))),
+			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+		).getId()
+			.map(Link::getHref)
+			.map(href -> {
+				try {
+					return new URI(href);
+				} catch (URISyntaxException e) {
+					throw new RuntimeException(e);
+				}
+			})
+			.map(uri -> ResponseEntity.noContent().location(uri).build())
+			.orElse(ResponseEntity.badRequest().body("Unable to update " + employeeToUpdate));
+	}
+
+	...
+}
+----
+
+This will look very similar, but focused on single item employees.
+
+NOTE: Are you sensing a repeat of code just seen? Like how the same links and affordances are defined here as was shown for
+each individual part of the aggregate root? It's possible to refactor this code into a `ResourceAssembler` to define a single
+location, but for simplicity, it has been left out of this example.
+
+To round out this controller, you must also code the `deleteEmployee()` operation:
+
+[source,java]
+----
+ @RestController
+ class EmployeeController {
+
+	...
+
+	@DeleteMapping("/employees/{id}")
+	ResponseEntity<?> deleteEmployee(@PathVariable long id) {
+
+		repository.deleteById(id);
+
+		return ResponseEntity.noContent().build();
+	}
+	
+	...
+}
+----
+
+This operation is quite simple. It deletes based upon *id* then returns an `HTTP 204 No Content` response.
+
+Our controller has been made more sophisticated by linking related operations together. However, to take advantage of this,
+we must shift gears and use a different hypermedia. This demands on additional step. By default, Spring Boot sets things
+up for HAL. To switch to HAL-FORMS, you need to create this:
 
 [source,java]
 ----
@@ -289,8 +338,8 @@ There is lot packed in here:
 * When you use this annotation, all of Spring Boot's autoconfigured hypermedia support is disabled. You are taking over, so the rest of the code is
  about finding any registered `ObjectMapper` beans in the app context and registering the HAL-FORMS support through builtin callbacks.
 
-WARNING: You currently cannot support more than one hypermedia-based mediatype as this point in time. If you try to use both `HAL` and `HAL_FORMS` in the annotation,
-Spring Boot will fail to launch.
+WARNING: You currently cannot support more than one hypermedia-based mediatype as this point in time. If you try to use
+both `HAL` and `HAL_FORMS` in the annotation, Spring Boot will fail to launch.
 
 IMPORTANT: We are working on simplifying the means to select different *and* multiple hypermedia formats.
 
@@ -324,8 +373,8 @@ This little database loader will:
 * The `CommandLineRunner` bean is executed by Spring Boot after the entire application context is up.
 * Inside that chunk of code, the injected `EmployeeRepository` is used to create a couple database entries.
 
-NOTE: The database for this example is `H2`, an in-memory database that always starts up empty. If you switch to a persistent store, you probably need
-to include the extra step to delete old data or you'll get multiple entries.
+NOTE: The database for this example is `H2`, an in-memory database that always starts up empty. If you switch to a persistent
+store, you probably need to include the extra step to delete old data or you'll get multiple entries.
 
 If you launch the application and `GET /employees`, you can expect the following HAL-FORMS result:
 
@@ -390,56 +439,14 @@ This template data is enough information for you to generate an HTML form on a w
 </form>
 ----
 
-You can also define affordances at the individual resource level. In this situation, you can start first by defining the controller methods:
+Are you wondering why Spring HATEOAS doesn't simply render an HTML form straight up? There are other mediatypes designed
+for this, especially XHTML. Using the Affordances API, we plan to add support in the future, allowing you to negotiate
+for the format you prefer.
 
-[source,java]
-----
-@RestController
-class EmployeeController {
+Do you want HAL? HAL-FORMS? SIREN? XHTML? Whatever format you need, the relation between endpoints doesn't have to change.
+Simply what you configure the server to render.
 
-	...
-
-	@GetMapping("/employees/{id}")
-	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
-
-		return repository.findById(id)
-			.map(assembler::toResource)
-			.map(ResponseEntity::ok)
-			.orElse(ResponseEntity.notFound().build());
-	}
-
-	@PutMapping("/employees/{id}")
-	ResponseEntity<?> updateEmployee(@RequestBody Employee employee, @PathVariable long id) {
-
-		Employee employeeToUpdate = employee;
-		employeeToUpdate.setId(id);
-
-		return repository.save(employeeToUpdate).getId()
-			.map(this::findOne)
-			.map(HttpEntity::getBody)
-			.flatMap(ResourceSupport::getId)
-			.map(Link::getHref)
-			.map(href -> {
-				try {
-					return new URI(href);
-				} catch (URISyntaxException e) {
-					throw new RuntimeException(e);
-				}
-			})
-			.map(uri -> ResponseEntity.noContent().location(uri).build())
-			.orElse(ResponseEntity.badRequest().body("Unable to update " + employeeToUpdate));
-	}
-
-	...
-}
-----
-
-This augments the same REST controller with a *GET* operation for an individual `Employee` and also defines the corresponding *PUT* operation
-to update/edit.
-
-Take your team to read both flows. The key part you must define, is the corresponding `EmployeeResourceAssembler.toResource(Employee)` method.
-
-If you ping `/employees/1`, you can see an individual entry:
+To round things out, you can also interrogate a single employee resource as shown below:
 
 [source,javascript]
 ----
@@ -479,6 +486,12 @@ If you ping `/employees/1`, you can see an individual entry:
           "required": true
         }
       ]
+    },
+    "deleteEmployee": {
+      "title": null,
+      "method": "delete",
+      "contentType": "",
+      "properties": []
     }
   }
 }
@@ -486,10 +499,12 @@ If you ping `/employees/1`, you can see an individual entry:
 
 * This is very similar to what you saw before, only there is no *_embedded* element. Instead, the resource's data is at the top level.
 * There are two links: *self* for the canonical link to itself and *employees* to lead back to the aggregate root.
-* The method of this template is *put* instead of *post*, indicating this is for updates.
-* All the properties are listed, being the same as shown at the aggregate root.
+* The method of the default template is *put* instead of *post*, indicating this is for updates.
+** All the properties are listed, being the same as shown at the aggregate root.
+* There is a second template, *deleteEmployee* with a method of *delete*. It has no properties meaning all we need is the
+URI to delete an existing employee.
 
-This information could _also_ be used on your web site to generate update forms:
+This information could easily be used on your web site to generate update forms:
 
 [source,html]
 ----
@@ -502,16 +517,26 @@ This information could _also_ be used on your web site to generate update forms:
 </form>
 ----
 
-This is just one example of an update form.
+You could also craft another form based on the `deleteEmployee` template:
 
-NOTE: `method="put"` isn't exactly valid HTML5. Either you can handle that in your code, or you have some sort of filter like Spring MVC's
-`HiddenHttpMethodFilter` that lets you construct it as `<form method="post" _method="put" ...>`, which converts a *POST* into a *PUT* before
-invoking the code.
+[source,html]
+----
+<form method="delete" action="http://localhost:8080/employees/1">
+	<input type="submit" value="Submit" />
+</form>
+----
+
+These are just a couple ways to render forms based on the hypermedia's templates.
+
+NOTE: `method="put"` and `method="delete"` aren't exactly valid HTML5. Either you can handle that in your code, or you
+have some sort of filter like Spring MVC's `HiddenHttpMethodFilter` that lets you construct it as
+`<form method="post" _method="put" ...>`, which converts a *POST* into a *PUT* before invoking the code.
 
 IMPORTANT: With HAL-FORMS, there is no URI in the template itself. It's presumed to operate on the *self* link.
 
-With the Affordances API, you can link related methods. And with HAL-FORMS support, it's possible to turn those relationships into automated
-bits of HTML to enhance the user experience without having to inject domain knowledge into the client layer.
+With the Affordances API, you can link related methods. And with HAL-FORMS support, it's possible to turn those
+relationships into automated bits of HTML to enhance the user experience without having to inject domain knowledge into
+the client layer.
 
-And that's a key part of REST--reducing the amount of domain knowledge found in the client, allowing the client to more easily adapt to
-changes on the server.
+And that's a key part of REST--reducing the amount of domain knowledge needed in the client. But instead pushing relevant
+forms straight out to the end user, the client can more easily adapt to changes on the server.

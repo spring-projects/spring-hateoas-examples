@@ -41,7 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(EmployeeController.class)
-@Import({EmployeeResourceAssembler.class, HypermediaConfiguration.class})
+@Import({HypermediaConfiguration.class})
 public class EmployeeControllerTests {
 
 	@Autowired

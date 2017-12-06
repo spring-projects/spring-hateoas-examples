@@ -15,15 +15,19 @@
  */
 package org.springframework.hateoas.examples;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,36 +42,40 @@ import org.springframework.web.bind.annotation.RestController;
 class EmployeeController {
 
 	private final EmployeeRepository repository;
-	private final EmployeeResourceAssembler assembler;
 
-	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler) {
+	EmployeeController(EmployeeRepository repository) {
 
 		this.repository = repository;
-		this.assembler = assembler;
 	}
 
 	@GetMapping("/employees")
 	ResponseEntity<Resources<Resource<Employee>>> findAll() {
-		return ResponseEntity.ok(
-			assembler.toResources(repository.findAll()));
-	}
 
-	@GetMapping("/employees/{id}")
-	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+		List<Resource<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
+			.map(employee -> new Resource<>(employee,
+				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
+					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
+					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
+				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+			))
+			.collect(Collectors.toList());
 
-		return repository.findById(id)
-			.map(assembler::toResource)
-			.map(ResponseEntity::ok)
-			.orElse(ResponseEntity.notFound().build());
+		return ResponseEntity.ok(new Resources<>(employeeResources,
+			linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).newEmployee(null)))));
 	}
 
 	@PostMapping("/employees")
 	ResponseEntity<?> newEmployee(@RequestBody Employee employee) {
 
-		return repository.save(employee).getId()
-			.map(this::findOne)
-			.map(HttpEntity::getBody)
-			.flatMap(ResourceSupport::getId)
+		Employee savedEmployee = repository.save(employee);
+
+		return new Resource<>(savedEmployee,
+			linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, savedEmployee.getId())))
+				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(savedEmployee.getId()))),
+			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+		).getId()
 			.map(Link::getHref)
 			.map(href -> {
 				try {
@@ -80,16 +88,34 @@ class EmployeeController {
 			.orElse(ResponseEntity.badRequest().body("Unable to create " + employee));
 	}
 
+	@GetMapping("/employees/{id}")
+	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+
+		return repository.findById(id)
+			.map(employee -> new Resource<>(employee,
+				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
+					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
+					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
+				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+			))
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
+	}
+
 	@PutMapping("/employees/{id}")
 	ResponseEntity<?> updateEmployee(@RequestBody Employee employee, @PathVariable long id) {
 
 		Employee employeeToUpdate = employee;
 		employeeToUpdate.setId(id);
 
-		return repository.save(employeeToUpdate).getId()
-			.map(this::findOne)
-			.map(HttpEntity::getBody)
-			.flatMap(ResourceSupport::getId)
+		Employee updatedEmployee = repository.save(employeeToUpdate);
+
+		return new Resource<>(updatedEmployee,
+			linkTo(methodOn(EmployeeController.class).findOne(updatedEmployee.getId())).withSelfRel()
+				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, updatedEmployee.getId())))
+				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(updatedEmployee.getId()))),
+			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
+		).getId()
 			.map(Link::getHref)
 			.map(href -> {
 				try {
@@ -100,5 +126,13 @@ class EmployeeController {
 			})
 			.map(uri -> ResponseEntity.noContent().location(uri).build())
 			.orElse(ResponseEntity.badRequest().body("Unable to update " + employeeToUpdate));
+	}
+
+	@DeleteMapping("/employees/{id}")
+	ResponseEntity<?> deleteEmployee(@PathVariable long id) {
+
+		repository.deleteById(id);
+
+		return ResponseEntity.noContent().build();
 	}
 }

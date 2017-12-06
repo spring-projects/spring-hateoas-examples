@@ -20,13 +20,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Optional;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import org.springframework.hateoas.Identifiable;
 
 /**
  * Domain object representing a company employee. Project Lombok keeps actual code at a minimum.
@@ -48,7 +44,7 @@ import org.springframework.hateoas.Identifiable;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;
@@ -64,9 +60,5 @@ class Employee implements Identifiable<Long> {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.role = role;
-	}
-
-	public Optional<Long> getId() {
-		return Optional.ofNullable(this.id);
 	}
 }
