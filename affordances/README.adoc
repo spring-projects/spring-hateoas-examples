@@ -39,7 +39,7 @@ context of REST, these are actions detailed by the hypermedia. With a HAL docume
 The links are shown but nothing else about them. What you can do with the links and what it takes to interact with them
 is not detailed.
 
-We can use content negotation to discover what HTTP verbs are supported. And we can take a shot at supplying properties
+You can use content negotation to discover what HTTP verbs are supported. And you can take a shot at supplying properties
 based on existing data records. But the beauty of REST is that by not having a single megaspec, you can adjust and adapt
 by adopting new mediatypes. HAL has been well received, but perhaps there is something better?
 
@@ -178,8 +178,8 @@ it's wrapped as a `Resource` with links added to itself and to the aggregate roo
 * Buried in both endpoints is the new `.andAffordance()` API. Instead of `linkTo()`, you instead use the `afford()` API
 to show related information.
 
-Affordances is about chaining related links together to support richer mediatypes. In this case, we have HAL-FORMS support. This means
-we can connect the *GET* link to its related *POST* link using the `andAffordance(afford(methodOn(...))`. A given link can
+Affordances is about chaining related links together to support richer mediatypes. In this case, Spring HATEOAS has HAL-FORMS support. This means
+you can connect the *GET* link to its related *POST* link using the `andAffordance(afford(methodOn(...))`. A given link can
 also connect to multiple affordances. That's why this example also shows linking to the `deleteEmployee` endpoint as well.
 
 The `methodOn()` API works just like the other examples show. But the `afford()` operation, based on web-specific technology (in this
@@ -277,8 +277,8 @@ To round out this controller, you must also code the `deleteEmployee()` operatio
 This operation is quite simple. It deletes based upon *id* then returns an `HTTP 204 No Content` response.
 
 Our controller has been made more sophisticated by linking related operations together. However, to take advantage of this,
-we must shift gears and use a different hypermedia. This demands on additional step. By default, Spring Boot sets things
-up for HAL. To switch to HAL-FORMS, you need to create this:
+you must shift gears and use a different hypermedia-based mediatype. This demands on additional step. By default, Spring
+Boot sets things up for HAL. To switch to HAL-FORMS, you need to create this:
 
 [source,java]
 ----
@@ -501,7 +501,7 @@ To round things out, you can also interrogate a single employee resource as show
 * There are two links: *self* for the canonical link to itself and *employees* to lead back to the aggregate root.
 * The method of the default template is *put* instead of *post*, indicating this is for updates.
 ** All the properties are listed, being the same as shown at the aggregate root.
-* There is a second template, *deleteEmployee* with a method of *delete*. It has no properties meaning all we need is the
+* There is a second template, *deleteEmployee* with a method of *delete*. It has no properties meaning all you need is the
 URI to delete an existing employee.
 
 This information could easily be used on your web site to generate update forms:
