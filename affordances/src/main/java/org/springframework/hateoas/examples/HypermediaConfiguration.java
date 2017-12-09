@@ -73,12 +73,6 @@ public class HypermediaConfiguration {
 		}
 
 		@Override
-		public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
-			return bean;
-		}
-
-		@Override
 		public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 			this.beanFactory = beanFactory;
 		}
