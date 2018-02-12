@@ -12,6 +12,7 @@ We have separate folders for each of these:
 == Spring HATEOAS Modules
 
 * link:basics[Basics] - Poke and prod at a hypermedia-powered service from inside the code as well as externally using standard tools
+* link:simplified[Simplified] - Use Spring HATEOAS in the simplest way possible.
 * link:api-evolution[API Evolution] - Upgrade an existing REST resource
 * link:hypermedia[Hypermedia] - Create hypermedia-driven REST resources, linking them together, and supporting older links.
 * link:affordances[Affordances] - Create richer hypermedia controls using more complex hypermedia formats
