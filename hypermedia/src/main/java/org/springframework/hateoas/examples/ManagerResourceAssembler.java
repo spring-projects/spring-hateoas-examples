@@ -38,7 +38,7 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 	 * @param resource
 	 */
 	@Override
-	protected void addLinks(Resource<Manager> resource) {
+	public void addLinks(Resource<Manager> resource) {
 		/**
 		 * Retain default links.
 		 */
@@ -57,7 +57,7 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 	 * @param resources
 	 */
 	@Override
-	protected void addLinks(Resources<Resource<Manager>> resources) {
+	public void addLinks(Resources<Resource<Manager>> resources) {
 
 		super.addLinks(resources);
 

@@ -38,7 +38,7 @@ class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Empl
 	 * @param resource
 	 */
 	@Override
-	protected void addLinks(Resource<Employee> resource) {
+	public void addLinks(Resource<Employee> resource) {
 
 		/**
 		 * Add some custom links to the default ones provided.
@@ -64,7 +64,7 @@ class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Empl
 	 * @param resources
 	 */
 	@Override
-	protected void addLinks(Resources<Resource<Employee>> resources) {
+	public void addLinks(Resources<Resource<Employee>> resources) {
 		
 		super.addLinks(resources);
 

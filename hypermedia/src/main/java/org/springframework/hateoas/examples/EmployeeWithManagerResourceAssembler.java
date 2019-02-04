@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
  * @author Greg Turnquist
  */
 @Component
-class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<EmployeeWithManager> {
+class EmployeeWithManagerResourceAssembler implements SimpleResourceAssembler<EmployeeWithManager> {
 
 	/**
 	 * Define links to add to every individual {@link Resource}.
@@ -34,7 +34,7 @@ class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<Emplo
 	 * @param resource
 	 */
 	@Override
-	protected void addLinks(Resource<EmployeeWithManager> resource) {
+	public void addLinks(Resource<EmployeeWithManager> resource) {
 
 		resource.add(linkTo(methodOn(EmployeeController.class).findDetailedEmployee(resource.getContent().getId())).withSelfRel());
 		resource.add(linkTo(methodOn(EmployeeController.class).findOne(resource.getContent().getId())).withRel("summary"));
@@ -47,7 +47,7 @@ class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<Emplo
 	 * @param resources
 	 */
 	@Override
-	protected void addLinks(Resources<Resource<EmployeeWithManager>> resources) {
+	public void addLinks(Resources<Resource<EmployeeWithManager>> resources) {
 
 		resources.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withSelfRel());
 		resources.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
