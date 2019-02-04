@@ -15,7 +15,6 @@
  */
 package org.springframework.hateoas.examples;
 
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -42,12 +41,8 @@ class ManagerController {
 	 * Look up all managers, and transform them into a REST collection resource using
 	 * {@link ManagerResourceAssembler#toResources(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
-	 *
-	 * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
-	 * default accept header, which allows XML to get requested first, so "produces"
-	 * forces it to HAL JSON for all clients.
 	 */
-	@GetMapping(value = "/managers", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/managers")
 	ResponseEntity<Resources<Resource<Manager>>> findAll() {
 		return ResponseEntity.ok(
 			assembler.toResources(repository.findAll()));
@@ -59,11 +54,9 @@ class ManagerController {
 	 * {@link ManagerResourceAssembler#toResource(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
-	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
-	 *
 	 * @param id
 	 */
-	@GetMapping(value = "/managers/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/managers/{id}")
 	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
@@ -78,7 +71,7 @@ class ManagerController {
 	 * @param id
 	 * @return
 	 */
-	@GetMapping(value = "/employees/{id}/manager", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees/{id}/manager")
 	ResponseEntity<Resource<Manager>> findManager(@PathVariable long id) {
 		return ResponseEntity.ok(
 			assembler.toResource(repository.findByEmployeesId(id)));

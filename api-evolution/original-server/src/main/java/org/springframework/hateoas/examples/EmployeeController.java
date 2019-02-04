@@ -17,7 +17,6 @@ package org.springframework.hateoas.examples;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
@@ -43,7 +42,7 @@ class EmployeeController {
 		this.assembler = assembler;
 	}
 
-	@GetMapping(value = "/", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/")
 	public ResourceSupport root() {
 
 		ResourceSupport rootResource = new ResourceSupport();
@@ -55,7 +54,7 @@ class EmployeeController {
 		return rootResource;
 	}
 
-	@GetMapping(value = "/employees", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees")
 	public Resources<Resource<Employee>> findAll() {
 		return assembler.toResources(repository.findAll());
 	}
@@ -72,7 +71,7 @@ class EmployeeController {
 			.body(assembler.toResource(savedEmployee));
 	}
 
-	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees/{id}")
 	public Resource<Employee> findOne(@PathVariable Long id) {
 		return repository.findById(id)
 			.map(assembler::toResource)

@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -52,12 +51,8 @@ class EmployeeController {
 	/**
 	 * Look up all employees, and transform them into a REST collection resource.
 	 * Then return them through Spring Web's {@link ResponseEntity} fluent API.
-	 *
-	 * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
-	 * default accept header, which allows XML to get requested first, so "produces"
-	 * forces it to HAL JSON for all clients.
 	 */
-	@GetMapping(value = "/employees", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees")
 	ResponseEntity<Resources<Resource<Employee>>> findAll() {
 
 		List<Resource<Employee>> employees = StreamSupport.stream(repository.findAll().spliterator(), false)
@@ -92,11 +87,9 @@ class EmployeeController {
 	 * Look up a single {@link Employee} and transform it into a REST resource. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
-	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
-	 *
 	 * @param id
 	 */
-	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees/{id}")
 	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)

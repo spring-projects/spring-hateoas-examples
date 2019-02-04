@@ -41,7 +41,7 @@ is not detailed.
 
 You can use content negotation to discover what HTTP verbs are supported. And you can take a shot at supplying properties
 based on existing data records. But the beauty of REST is that by not having a single megaspec, you can adjust and adapt
-by adopting new mediatypes. HAL has been well received, but perhaps there is something better?
+by adopting new media types. HAL has been well received, but perhaps there is something better?
 
 HAL-FORMS, an extension of HAL, attempts to bridge this gap. It supports HAL's lightweight of concept of data and links,
 but introduces another element, *_templates*. *_templates* make it possible to show all the operations possible as well as
@@ -178,7 +178,7 @@ it's wrapped as a `Resource` with links added to itself and to the aggregate roo
 * Buried in both endpoints is the new `.andAffordance()` API. Instead of `linkTo()`, you instead use the `afford()` API
 to show related information.
 
-Affordances is about chaining related links together to support richer mediatypes. In this case, Spring HATEOAS has HAL-FORMS support. This means
+Affordances is about chaining related links together to support richer media types. In this case, Spring HATEOAS has HAL-FORMS support. This means
 you can connect the *GET* link to its related *POST* link using the `andAffordance(afford(methodOn(...))`. A given link can
 also connect to multiple affordances. That's why this example also shows linking to the `deleteEmployee` endpoint as well.
 
@@ -277,7 +277,7 @@ To round out this controller, you must also code the `deleteEmployee()` operatio
 This operation is quite simple. It deletes based upon *id* then returns an `HTTP 204 No Content` response.
 
 Our controller has been made more sophisticated by linking related operations together. However, to take advantage of this,
-you must shift gears and use a different hypermedia-based mediatype. This demands on additional step. By default, Spring
+you must shift gears and use a different hypermedia-based media type. This demands on additional step. By default, Spring
 Boot sets things up for HAL. To switch to HAL-FORMS, you need to create this:
 
 [source,java]
@@ -393,7 +393,7 @@ This template data is enough information for you to generate an HTML form on a w
 IMPORTANT: Spring HATEOAS doesn't provide the JavaScript to do this. This hypermedia format, though, has all the information you need to create it yourself. Or deploy somebody's
 3rd party library that speaks HAL-FORMS.
 
-Are you wondering why Spring HATEOAS doesn't simply render an HTML form straight up? There are other mediatypes designed
+Are you wondering why Spring HATEOAS doesn't simply render an HTML form straight up? There are other media types designed
 for this, especially XHTML. Using the Affordances API, we plan to add support in the future, allowing you to negotiate
 for the format you prefer.
 

@@ -82,7 +82,7 @@ Start by adding a *root node* for clients to start from. The idea is to find rel
 
 [source,java]
 ----
-@GetMapping(value = "/", produces = MediaTypes.HAL_JSON_VALUE)
+@GetMapping("/")
 public ResourceSupport root() {
 
 	ResourceSupport rootResource = new ResourceSupport();

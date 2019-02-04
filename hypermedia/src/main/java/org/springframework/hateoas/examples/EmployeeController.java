@@ -18,7 +18,6 @@ package org.springframework.hateoas.examples;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -48,12 +47,8 @@ class EmployeeController {
 	 * Look up all employees, and transform them into a REST collection resource using
 	 * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
-	 *
-	 * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
-	 * default accept header, which allows XML to get requested first, so "produces"
-	 * forces it to HAL JSON for all clients.
 	 */
-	@GetMapping(value = "/employees", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees")
 	public ResponseEntity<Resources<Resource<Employee>>> findAll() {
 		return ResponseEntity.ok(
 			assembler.toResources(repository.findAll()));
@@ -65,11 +60,9 @@ class EmployeeController {
 	 * {@link EmployeeResourceAssembler#toResource(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
-	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
-	 *
 	 * @param id
 	 */
-	@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees/{id}")
 	public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
@@ -84,13 +77,13 @@ class EmployeeController {
 	 * @param id
 	 * @return
 	 */
-	@GetMapping(value = "/managers/{id}/employees", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/managers/{id}/employees")
 	public ResponseEntity<Resources<Resource<Employee>>> findEmployees(@PathVariable long id) {
 		return ResponseEntity.ok(
 			assembler.toResources(repository.findByManagerId(id)));
 	}
 
-	@GetMapping(value = "/employees/detailed", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees/detailed")
 	public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedEmployees() {
 
 		return ResponseEntity.ok(
@@ -100,7 +93,7 @@ class EmployeeController {
 					.collect(Collectors.toList())));
 	}
 
-	@GetMapping(value = "/employees/{id}/detailed", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/employees/{id}/detailed")
 	public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
 
 		return repository.findById(id)

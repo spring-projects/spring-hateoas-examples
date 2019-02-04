@@ -5,7 +5,7 @@ image:https://travis-ci.org/spring-projects/spring-hateoas-examples.svg?branch=m
 This repository contains example projects to interact with Spring HATEOAS.
 
 * Learn how to interact with a Spring HATEOAS-powered app, from inside as well as the command line.
-* See how to upgrade a REST resource without having to create new mediatypes, version URIs, etc.
+* See how to upgrade a REST resource without having to create new media types, version URIs, etc.
 
 We have separate folders for each of these:
 

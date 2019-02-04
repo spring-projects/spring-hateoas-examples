@@ -15,7 +15,6 @@
  */
 package org.springframework.hateoas.examples;
 
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +36,7 @@ public class SupervisorController {
 		this.controller = controller;
 	}
 
-	@GetMapping(value = "/supervisors/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/supervisors/{id}")
 	public ResponseEntity<Resource<Supervisor>> findOne(@PathVariable Long id) {
 
 		Resource<Manager> managerResource = controller.findOne(id).getBody();

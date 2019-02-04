@@ -89,7 +89,7 @@ Spring HATEOAS defines a generic `Resource<T>` container that lets store any dom
 add additional links.
 
 IMPORTANT: Spring HATEOAS's `Resource` and `Link` classes are *vendor neutral*. HAL is thrown around a lot, being the
-default mediatype, but these classes can be used to render any mediatype.
+default media type, but these classes can be used to render any media type.
 
 A common convention is to create a factory used to convert `Employee` objects into `Resource<Employee>` objects. Spring
 HATEOAS provides `SimpleIdentifiableResourceAssembler<T>` as the simplest mechanism to perform these conversions.
@@ -162,12 +162,8 @@ The collection's route is shown below:
  * Look up all employees, and transform them into a REST collection resource using
  * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
  * Spring Web's {@link ResponseEntity} fluent API.
- *
- * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
- * default accept header, which allows XML to get requested first, so "produces"
- * forces it to HAL JSON for all clients.
  */
-@GetMapping(value = "/employees", produces = MediaTypes.HAL_JSON_VALUE)
+@GetMapping("/employees")
 public ResponseEntity<Resources<Resource<Employee>>> findAll() {
 	return ResponseEntity.ok(
 		assembler.toResources(repository.findAll()));
@@ -191,11 +187,9 @@ To build a single resource, the `/employees/{id}` route is shown below:
  * {@link EmployeeResourceAssembler#toResource(Object)}. Then return it through
  * Spring Web's {@link ResponseEntity} fluent API.
  *
- * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
- *
  * @param id
  */
-@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+@GetMapping("/employees/{id}")
 public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
 	return ResponseEntity.ok(
 		assembler.toResource(repository.findOne(id)));
@@ -266,11 +260,11 @@ public void getShouldFetchAHalDocument() throws Exception {
 ----
 
 * At first, the test case uses Mockito's `given()` method to define the "given"s of the test.
-* Next, it uses Spring Mock MVC's `mvc` to `perform()` a *GET /employees* call with an accept header of HAL's mediatype.
+* Next, it uses Spring Mock MVC's `mvc` to `perform()` a *GET /employees* call with an accept header of HAL's media type.
 * As a courtesy, it uses the `.andDo(print())` to give us a complete print out of the whole thing on the console.
 * Finally, it chains a whole series of assertions.
 ** Verify HTTP status is *200 OK*.
-** Verify the response *Content-Type* header is also HAL's mediatype.
+** Verify the response *Content-Type* header is also HAL's media type.
 ** Verify that the JSON Path of *$._embedded.employees[0].id* is `1`.
 
 The rest of the assertions are commented out, but you can read it in the source code.

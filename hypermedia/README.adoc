@@ -143,12 +143,8 @@ class ManagerController {
 	 * Look up all managers, and transform them into a REST collection resource using
 	 * {@link ManagerResourceAssembler#toResources(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
-	 *
-	 * NOTE: cURL will fetch things as HAL JSON directly, but browsers issue a different
-	 * default accept header, which allows XML to get requested first, so "produces"
-	 * forces it to HAL JSON for all clients.
 	 */
-	@GetMapping(value = "/managers", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/managers")
 	ResponseEntity<Resources<Resource<Manager>>> findAll() {
 		return ResponseEntity.ok(
 			assembler.toResources(repository.findAll()));
@@ -160,11 +156,9 @@ class ManagerController {
 	 * {@link ManagerResourceAssembler#toResource(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
-	 * See {@link #findAll()} to explain {@link GetMapping}'s "produces" argument.
-	 *
 	 * @param id
 	 */
-	@GetMapping(value = "/managers/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/managers/{id}")
 	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
 		return ResponseEntity.ok(
 			assembler.toResource(repository.findOne(id)));
@@ -182,7 +176,7 @@ With the basic routes defined, you could say we have an operational REST service
 power up the hypermedia and serve clients, you need to add links _between_ the relevant domain types.
 
 NOTE: Up until this point, we've been using the term "domain types" or "domain objects". This is lingo found in Domain Driven Design.
-What you are building are *REST resources* and how the various mediatypes they are represented in. The paradigm of REST is
+What you are building are *REST resources* and how the various media types they are represented in. The paradigm of REST is
 to construct resources that contain both data for the client to consume as well as controls to navigate to related data.
 
 The first link to navigate from a `Manager` resource to its related `Employee` resources would be a */managers/{id}/employees*
@@ -202,7 +196,7 @@ class EmployeeController {
 	 * @param id
 	 * @return
 	 */
-	@GetMapping(value = "/managers/{id}/employees", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/managers/{id}/employees")
 	public ResponseEntity<Resources<Resource<Employee>>> findEmployees(@PathVariable long id) {
 		return ResponseEntity.ok(
 			assembler.toResources(repository.findByManagerId(id)));
@@ -318,7 +312,7 @@ To support this, we can write the corresponding route in `EmployeeController`:
 
 [source,java]
 ----
-@GetMapping(value = "/employees/detailed", produces = MediaTypes.HAL_JSON_VALUE)
+@GetMapping("/employees/detailed")
 public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedEmployees() {
 
 	return ResponseEntity.ok(
@@ -328,7 +322,7 @@ public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedE
 				.collect(Collectors.toList())));
 }
 
-@GetMapping(value = "/employees/{id}/detailed", produces = MediaTypes.HAL_JSON_VALUE)
+@GetMapping("/employees/{id}/detailed")
 public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
 
 	Employee employee = repository.findOne(id);
@@ -403,7 +397,7 @@ to code something like this:
 
 [source,java]
 ----
-@GetMapping(value = "/employees/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+@GetMapping("/employees/{id}")
 public ResponseEntity<?> findOne(@PathVariable long id,
 		@RequestParam(value = "detailed", required = false,
 		defaultValue = false) boolean detailed) {
@@ -527,7 +521,7 @@ public class SupervisorController {
 		this.controller = controller;
 	}
 
-	@GetMapping(value = "/supervisors/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping("/supervisors/{id}")
 	public ResponseEntity<Resource<Supervisor>> findOne(@PathVariable Long id) {
 
 		Resource<Manager> managerResource = controller.findOne(id).getBody();
