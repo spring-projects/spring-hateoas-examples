@@ -286,62 +286,13 @@ Boot sets things up for HAL. To switch to HAL-FORMS, you need to create this:
 @EnableHypermediaSupport(type = HypermediaType.HAL_FORMS)
 public class HypermediaConfiguration {
 
-	@Bean
-	public static HalObjectMapperConfigurer halObjectMapperConfigurer() {
-		return new HalObjectMapperConfigurer();
-	}
-
-	private static class HalObjectMapperConfigurer
-		implements BeanPostProcessor, BeanFactoryAware {
-
-		private BeanFactory beanFactory;
-
-		/**
-		 * Assume any {@link ObjectMapper} starts with {@literal _hal} and ends with {@literal Mapper}.
-		 */
-		@Override
-		public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
-			if (bean instanceof ObjectMapper && beanName.startsWith("_hal") && beanName.endsWith("Mapper")) {
-				postProcessHalObjectMapper((ObjectMapper) bean);
-			}
-			return bean;
-		}
-
-		private void postProcessHalObjectMapper(ObjectMapper objectMapper) {
-			try {
-				Jackson2ObjectMapperBuilder builder = this.beanFactory.getBean(Jackson2ObjectMapperBuilder.class);
-				builder.configure(objectMapper);
-			} catch (NoSuchBeanDefinitionException ex) {
-				// No Jackson configuration required
-			}
-		}
-
-		@Override
-		public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
-			return bean;
-		}
-
-		@Override
-		public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-			this.beanFactory = beanFactory;
-		}
-	}
 }
 ----
 
-There is lot packed in here:
+There is lot packed in this tiny class:
 
 * `@Configuration` makes this class automatically picked up by Spring Boot's component scanning.
 * `@EnableHypermediaSupport(type = HypermediaType.HAL_FORMS)` activates Spring HATEOAS's hypermedia support, setting the format to HAL-FORMS.
-* When you use this annotation, all of Spring Boot's autoconfigured hypermedia support is disabled. You are taking over, so the rest of the code is
- about finding any registered `ObjectMapper` beans in the app context and registering the HAL-FORMS support through builtin callbacks.
-
-WARNING: You currently cannot support more than one hypermedia-based mediatype as this point in time. If you try to use
-both `HAL` and `HAL_FORMS` in the annotation, Spring Boot will fail to launch.
-
-IMPORTANT: We are working on simplifying the means to select different *and* multiple hypermedia formats.
 
 Before launching the application, you'll want to pre-load some test data:
 
@@ -369,7 +320,7 @@ class DatabaseLoader {
 
 This little database loader will:
 
-* Be picked up by component scanning due to the `@Component` annotation.
+* Be picked up by Spring Boot's component scanning due to the `@Component` annotation.
 * The `CommandLineRunner` bean is executed by Spring Boot after the entire application context is up.
 * Inside that chunk of code, the injected `EmployeeRepository` is used to create a couple database entries.
 
@@ -439,6 +390,9 @@ This template data is enough information for you to generate an HTML form on a w
 </form>
 ----
 
+IMPORTANT: Spring HATEOAS doesn't provide the JavaScript to do this. This hypermedia format, though, has all the information you need to create it yourself. Or deploy somebody's
+3rd party library that speaks HAL-FORMS.
+
 Are you wondering why Spring HATEOAS doesn't simply render an HTML form straight up? There are other mediatypes designed
 for this, especially XHTML. Using the Affordances API, we plan to add support in the future, allowing you to negotiate
 for the format you prefer.
@@ -504,7 +458,7 @@ To round things out, you can also interrogate a single employee resource as show
 * There is a second template, *deleteEmployee* with a method of *delete*. It has no properties meaning all you need is the
 URI to delete an existing employee.
 
-This information could easily be used on your web site to generate update forms:
+This information could easily be used on your web site to generate an update form:
 
 [source,html]
 ----
@@ -528,7 +482,7 @@ You could also craft another form based on the `deleteEmployee` template:
 
 These are just a couple ways to render forms based on the hypermedia's templates.
 
-NOTE: `method="put"` and `method="delete"` aren't exactly valid HTML5. Either you can handle that in your code, or you
+NOTE: `method="put"` and `method="delete"` aren't valid HTML5. Either you handle that in your code, or you
 have some sort of filter like Spring MVC's `HiddenHttpMethodFilter` that lets you construct it as
 `<form method="post" _method="put" ...>`, which converts a *POST* into a *PUT* before invoking the code.
 
@@ -538,5 +492,6 @@ With the Affordances API, you can link related methods. And with HAL-FORMS suppo
 relationships into automated bits of HTML to enhance the user experience without having to inject domain knowledge into
 the client layer.
 
-And that's a key part of REST--reducing the amount of domain knowledge needed in the client. But instead pushing relevant
-forms straight out to the end user, the client can more easily adapt to changes on the server.
+And that's a key part of REST--reducing the amount of domain knowledge needed in the client. Teach your clients a little more
+knowledge about the protocol, and they won't have to know as much about the domain. Instead, push the relevant
+forms straight out to the end user, are more easily adapt to changes on the server!

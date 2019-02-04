@@ -25,9 +25,12 @@ import org.springframework.hateoas.core.EvoInflectorRelProvider;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 
 /**
+ * A {@link SimpleResourceAssembler} that mixes together a Spring web controller and a {@link RelProvider} to build links
+ * upon a certain strategy.
+ * 
  * @author Greg Turnquist
  */
-public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> extends SimpleResourceAssembler<T> {
+public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> implements SimpleResourceAssembler<T> {
 
 	/**
 	 * The Spring MVC class for the {@link Identifiable} from which links will be built.
@@ -77,35 +80,36 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> exte
 	}
 
 	/**
-	 * Define links to add to every {@link Resource}.
+	 * Add single item self link based on {@link Identifiable} and link back to aggregate root of the {@literal T} domain
+	 * type using {@link RelProvider#getCollectionResourceRelFor(Class)}}.
 	 *
 	 * @param resource
 	 */
 	@Override
-	protected void addLinks(Resource<T> resource) {
+	public void addLinks(Resource<T> resource) {
 
 		resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel());
 		resource.add(getCollectionLinkBuilder().withRel(this.relProvider.getCollectionResourceRelFor(this.resourceType)));
 	}
 
 	/**
-	 * Define links to add to {@link Resources} collection.
+	 * Add a self link to the aggregate root.
 	 *
 	 * @param resources
 	 */
 	@Override
-	protected void addLinks(Resources<Resource<T>> resources) {
+	public void addLinks(Resources<Resource<T>> resources) {
 		resources.add(getCollectionLinkBuilder().withSelfRel());
 	}
 
 	/**
-	 * Build up a URI for the collection using the Spring MVC controller followed by the resource type transformed
+	 * Build up a URI for the collection using the Spring web controller followed by the resource type transformed
 	 * by the {@link RelProvider}.
 	 *
-	 * Assumption is that an {@link org.springframework.hateoas.examples.EmployeeController} serving up {@link org.springframework.hateoas.examples.Employee}
+	 * Assumption is that an {@literal EmployeeController} serving up {@literal Employee}
 	 * objects will be serving resources at {@code /employees} and {@code /employees/1}.
 	 *
-	 * If this is not the case, simply override this method in your concrete instance, or simply resort to
+	 * If this is not the case, simply override this method in your concrete instance, or resort to
 	 * overriding {@link #addLinks(Resource)} and {@link #addLinks(Resources)} where you have full control over exactly
 	 * what links are put in the individual and collection resources.
 	 *
@@ -124,6 +128,9 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> exte
 		return linkBuilder;
 	}
 
+	/**
+	 * Provide opportunity to override the base path for the URI.
+	 */
 	private String getPrefix() {
 		return getBasePath().isEmpty() ? "" : getBasePath() + "/";
 	}
