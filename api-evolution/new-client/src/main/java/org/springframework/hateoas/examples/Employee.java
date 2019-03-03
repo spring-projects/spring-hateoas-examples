@@ -19,8 +19,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * An updated domain object on the client side. It doesn't need all the backward compatible bits that the new
- * server needs (unless this becomes a service of its own).
+ * An updated domain object on the client side. It doesn't need all the backward compatible bits that the new server
+ * needs (unless this becomes a service of its own).
  * 
  * @author Greg Turnquist
  */

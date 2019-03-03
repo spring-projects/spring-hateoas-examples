@@ -41,100 +41,96 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(EmployeeController.class)
-@Import({HypermediaConfiguration.class})
+@Import({ HypermediaConfiguration.class })
 public class EmployeeControllerTests {
 
-	@Autowired
-	private MockMvc mvc;
+	@Autowired private MockMvc mvc;
 
-	@MockBean
-	private EmployeeRepository repository;
+	@MockBean private EmployeeRepository repository;
 
 	@Test
 	public void getAllShouldFetchAHalFormsEmbeddedDocument() throws Exception {
 
-		given(repository.findAll()).willReturn(
-			Arrays.asList(
-				new Employee(1L, "Frodo", "Baggins", "ring bearer"),
+		given(repository.findAll()).willReturn(Arrays.asList( //
+				new Employee(1L, "Frodo", "Baggins", "ring bearer"), //
 				new Employee(2L, "Bilbo", "Baggins", "burglar")));
 
-		mvc.perform(get("/employees").accept(MediaTypes.HAL_FORMS_JSON_VALUE))
-			.andDo(print())
-			.andExpect(status().isOk())
-			.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE + ";charset=UTF-8"))
+		mvc.perform(get("/employees").accept(MediaTypes.HAL_FORMS_JSON_VALUE)) //
+				.andDo(print()) //
+				.andExpect(status().isOk()) //
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE + ";charset=UTF-8"))
 
-			.andExpect(jsonPath("$._embedded.employees[0].id", is(1)))
-			.andExpect(jsonPath("$._embedded.employees[0].firstName", is("Frodo")))
-			.andExpect(jsonPath("$._embedded.employees[0].lastName", is("Baggins")))
-			.andExpect(jsonPath("$._embedded.employees[0].role", is("ring bearer")))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.method", is("put")))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[0].name", is("firstName")))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[0].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[1].name", is("id")))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[1].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[2].name", is("lastName")))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[2].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[3].name", is("role")))
-			.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[3].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[0]._links.self.href", is("http://localhost/employees/1")))
-			.andExpect(jsonPath("$._embedded.employees[0]._links.employees.href", is("http://localhost/employees")))
+				.andExpect(jsonPath("$._embedded.employees[0].id", is(1)))
+				.andExpect(jsonPath("$._embedded.employees[0].firstName", is("Frodo")))
+				.andExpect(jsonPath("$._embedded.employees[0].lastName", is("Baggins")))
+				.andExpect(jsonPath("$._embedded.employees[0].role", is("ring bearer")))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.method", is("put")))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[0].name", is("firstName")))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[0].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[1].name", is("id")))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[1].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[2].name", is("lastName")))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[2].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[3].name", is("role")))
+				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[3].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[0]._links.self.href", is("http://localhost/employees/1")))
+				.andExpect(jsonPath("$._embedded.employees[0]._links.employees.href", is("http://localhost/employees")))
 
-			.andExpect(jsonPath("$._embedded.employees[1].id", is(2)))
-			.andExpect(jsonPath("$._embedded.employees[1].firstName", is("Bilbo")))
-			.andExpect(jsonPath("$._embedded.employees[1].lastName", is("Baggins")))
-			.andExpect(jsonPath("$._embedded.employees[1].role", is("burglar")))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.method", is("put")))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[0].name", is("firstName")))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[0].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[1].name", is("id")))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[1].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[2].name", is("lastName")))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[2].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[3].name", is("role")))
-			.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[3].required", is(true)))
-			.andExpect(jsonPath("$._embedded.employees[1]._links.self.href", is("http://localhost/employees/2")))
-			.andExpect(jsonPath("$._embedded.employees[1]._links.employees.href", is("http://localhost/employees")))
+				.andExpect(jsonPath("$._embedded.employees[1].id", is(2)))
+				.andExpect(jsonPath("$._embedded.employees[1].firstName", is("Bilbo")))
+				.andExpect(jsonPath("$._embedded.employees[1].lastName", is("Baggins")))
+				.andExpect(jsonPath("$._embedded.employees[1].role", is("burglar")))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.method", is("put")))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[0].name", is("firstName")))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[0].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[1].name", is("id")))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[1].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[2].name", is("lastName")))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[2].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[3].name", is("role")))
+				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[3].required", is(true)))
+				.andExpect(jsonPath("$._embedded.employees[1]._links.self.href", is("http://localhost/employees/2")))
+				.andExpect(jsonPath("$._embedded.employees[1]._links.employees.href", is("http://localhost/employees")))
 
-			.andExpect(jsonPath("$._templates.default.method", is("post")))
-			.andExpect(jsonPath("$._templates.default.properties[0].name", is("firstName")))
-			.andExpect(jsonPath("$._templates.default.properties[0].required", is(true)))
-			.andExpect(jsonPath("$._templates.default.properties[1].name", is("id")))
-			.andExpect(jsonPath("$._templates.default.properties[1].required", is(true)))
-			.andExpect(jsonPath("$._templates.default.properties[2].name", is("lastName")))
-			.andExpect(jsonPath("$._templates.default.properties[2].required", is(true)))
-			.andExpect(jsonPath("$._templates.default.properties[3].name", is("role")))
-			.andExpect(jsonPath("$._templates.default.properties[3].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.method", is("post")))
+				.andExpect(jsonPath("$._templates.default.properties[0].name", is("firstName")))
+				.andExpect(jsonPath("$._templates.default.properties[0].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.properties[1].name", is("id")))
+				.andExpect(jsonPath("$._templates.default.properties[1].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.properties[2].name", is("lastName")))
+				.andExpect(jsonPath("$._templates.default.properties[2].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.properties[3].name", is("role")))
+				.andExpect(jsonPath("$._templates.default.properties[3].required", is(true)))
 
-			.andExpect(jsonPath("$._links.self.href", is("http://localhost/employees")));
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/employees")));
 	}
 
 	@Test
 	public void getOneShouldFetchASingleHalFormsDocument() throws Exception {
 
-		given(repository.findById(any())).willReturn(
-			Optional.of(new Employee(1L, "Frodo", "Baggins", "ring bearer")));
+		given(repository.findById(any())).willReturn(Optional.of(new Employee(1L, "Frodo", "Baggins", "ring bearer")));
 
-		mvc.perform(get("/employees/1").accept(MediaTypes.HAL_FORMS_JSON_VALUE))
-			.andDo(print())
-			.andExpect(status().isOk())
-			.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE + ";charset=UTF-8"))
+		mvc.perform(get("/employees/1").accept(MediaTypes.HAL_FORMS_JSON_VALUE)) //
+				.andDo(print()) //
+				.andExpect(status().isOk()) //
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE + ";charset=UTF-8"))
 
-			.andExpect(jsonPath("$.id", is(1)))
-			.andExpect(jsonPath("$.firstName", is("Frodo")))
-			.andExpect(jsonPath("$.lastName", is("Baggins")))
-			.andExpect(jsonPath("$.role", is("ring bearer")))
+				.andExpect(jsonPath("$.id", is(1))) //
+				.andExpect(jsonPath("$.firstName", is("Frodo"))) //
+				.andExpect(jsonPath("$.lastName", is("Baggins"))) //
+				.andExpect(jsonPath("$.role", is("ring bearer")))
 
-			.andExpect(jsonPath("$._templates.default.method", is("put")))
-			.andExpect(jsonPath("$._templates.default.properties[0].name", is("firstName")))
-			.andExpect(jsonPath("$._templates.default.properties[0].required", is(true)))
-			.andExpect(jsonPath("$._templates.default.properties[1].name", is("id")))
-			.andExpect(jsonPath("$._templates.default.properties[1].required", is(true)))
-			.andExpect(jsonPath("$._templates.default.properties[2].name", is("lastName")))
-			.andExpect(jsonPath("$._templates.default.properties[2].required", is(true)))
-			.andExpect(jsonPath("$._templates.default.properties[3].name", is("role")))
-			.andExpect(jsonPath("$._templates.default.properties[3].required", is(true)))
-			
-			.andExpect(jsonPath("$._links.self.href", is("http://localhost/employees/1")))
-			.andExpect(jsonPath("$._links.employees.href", is("http://localhost/employees")));
+				.andExpect(jsonPath("$._templates.default.method", is("put")))
+				.andExpect(jsonPath("$._templates.default.properties[0].name", is("firstName")))
+				.andExpect(jsonPath("$._templates.default.properties[0].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.properties[1].name", is("id")))
+				.andExpect(jsonPath("$._templates.default.properties[1].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.properties[2].name", is("lastName")))
+				.andExpect(jsonPath("$._templates.default.properties[2].required", is(true)))
+				.andExpect(jsonPath("$._templates.default.properties[3].name", is("role")))
+				.andExpect(jsonPath("$._templates.default.properties[3].required", is(true)))
+
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/employees/1")))
+				.andExpect(jsonPath("$._links.employees.href", is("http://localhost/employees")));
 	}
 }

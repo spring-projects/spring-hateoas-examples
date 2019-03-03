@@ -30,6 +30,7 @@ class DatabaseLoader {
 	@Bean
 	CommandLineRunner initDatabase(EmployeeRepository employeeRepository, ManagerRepository managerRepository) {
 		return args -> {
+
 			/*
 			 * Gather Gandalf's team
 			 */

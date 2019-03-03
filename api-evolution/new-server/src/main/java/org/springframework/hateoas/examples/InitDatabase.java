@@ -33,6 +33,7 @@ class InitDatabase {
 
 	@Bean
 	CommandLineRunner loadEmployees() {
+
 		return args -> {
 			repository.save(new Employee("Frodo", "Baggins", "ring bearer"));
 			repository.save(new Employee("Bilbo", "Baggins", "burglar"));
