@@ -15,30 +15,30 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.SimpleIdentifiableResourceAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.SimpleIdentifiableRepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
 /**
  * @author Greg Turnquist
  */
 @Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
+class EmployeeRepresentationModelAssembler extends SimpleIdentifiableRepresentationModelAssembler<Employee> {
 
-	EmployeeResourceAssembler() {
+	EmployeeRepresentationModelAssembler() {
 		super(EmployeeController.class);
 	}
 
 	/**
-	 * Define links to add to every {@link Resource}.
+	 * Define links to add to every {@link EntityModel}.
 	 *
 	 * @param resource
 	 */
 	@Override
-	public void addLinks(Resource<Employee> resource) {
+	public void addLinks(EntityModel<Employee> resource) {
 
 		/**
 		 * Add some custom links to the default ones provided.
@@ -59,12 +59,12 @@ class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Empl
 	}
 
 	/**
-	 * Define links to add to {@link Resources} collection.
+	 * Define links to add to {@link CollectionModel} collection.
 	 *
 	 * @param resources
 	 */
 	@Override
-	public void addLinks(Resources<Resource<Employee>> resources) {
+	public void addLinks(CollectionModel<EntityModel<Employee>> resources) {
 		
 		super.addLinks(resources);
 

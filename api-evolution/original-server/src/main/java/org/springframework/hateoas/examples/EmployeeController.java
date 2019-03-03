@@ -15,11 +15,11 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,18 +34,18 @@ import org.springframework.web.bind.annotation.RestController;
 class EmployeeController {
 
 	private final EmployeeRepository repository;
-	private final EmployeeResourceAssembler assembler;
+	private final EmployeeRepresentationModelAssembler assembler;
 
-	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler) {
+	EmployeeController(EmployeeRepository repository, EmployeeRepresentationModelAssembler assembler) {
 
 		this.repository = repository;
 		this.assembler = assembler;
 	}
 
 	@GetMapping("/")
-	public ResourceSupport root() {
+	public RepresentationModel root() {
 
-		ResourceSupport rootResource = new ResourceSupport();
+		RepresentationModel rootResource = new RepresentationModel();
 
 		rootResource.add(
 			linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
@@ -55,12 +55,12 @@ class EmployeeController {
 	}
 
 	@GetMapping("/employees")
-	public Resources<Resource<Employee>> findAll() {
-		return assembler.toResources(repository.findAll());
+	public CollectionModel<EntityModel<Employee>> findAll() {
+		return assembler.toCollectionModel(repository.findAll());
 	}
 
 	@PostMapping("/employees")
-	public ResponseEntity<Resource<Employee>> newEmployee(@RequestBody Employee employee) {
+	public ResponseEntity<EntityModel<Employee>> newEmployee(@RequestBody Employee employee) {
 
 		Employee savedEmployee = repository.save(employee);
 
@@ -68,13 +68,13 @@ class EmployeeController {
 			.created(savedEmployee.getId()
 				.map(id -> linkTo(methodOn(EmployeeController.class).findOne(id)).toUri())
 				.orElseThrow(() -> new RuntimeException("Failed to create for some reason")))
-			.body(assembler.toResource(savedEmployee));
+			.body(assembler.toModel(savedEmployee));
 	}
 
 	@GetMapping("/employees/{id}")
-	public Resource<Employee> findOne(@PathVariable Long id) {
+	public EntityModel<Employee> findOne(@PathVariable Long id) {
 		return repository.findById(id)
-			.map(assembler::toResource)
+			.map(assembler::toModel)
 			.orElseThrow(() -> new RuntimeException("No employee '" + id + "' found"));
 	}
 
