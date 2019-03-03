@@ -15,26 +15,26 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.SimpleResourceAssembler;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.SimpleRepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
 /**
  * @author Greg Turnquist
  */
 @Component
-class EmployeeWithManagerResourceAssembler implements SimpleResourceAssembler<EmployeeWithManager> {
+class EmployeeWithManagerResourceAssembler implements SimpleRepresentationModelAssembler<EmployeeWithManager> {
 
 	/**
-	 * Define links to add to every individual {@link Resource}.
+	 * Define links to add to every individual {@link EntityModel}.
 	 *
 	 * @param resource
 	 */
 	@Override
-	public void addLinks(Resource<EmployeeWithManager> resource) {
+	public void addLinks(EntityModel<EmployeeWithManager> resource) {
 
 		resource.add(linkTo(methodOn(EmployeeController.class).findDetailedEmployee(resource.getContent().getId())).withSelfRel());
 		resource.add(linkTo(methodOn(EmployeeController.class).findOne(resource.getContent().getId())).withRel("summary"));
@@ -42,12 +42,12 @@ class EmployeeWithManagerResourceAssembler implements SimpleResourceAssembler<Em
 	}
 
 	/**
-	 * Define links to add to the {@link Resources} collection.
+	 * Define links to add to the {@link CollectionModel} collection.
 	 *
 	 * @param resources
 	 */
 	@Override
-	public void addLinks(Resources<Resource<EmployeeWithManager>> resources) {
+	public void addLinks(CollectionModel<EntityModel<EmployeeWithManager>> resources) {
 
 		resources.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withSelfRel());
 		resources.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));

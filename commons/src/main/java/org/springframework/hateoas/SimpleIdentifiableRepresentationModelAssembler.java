@@ -15,22 +15,28 @@
  */
 package org.springframework.hateoas;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import lombok.Getter;
 import lombok.Setter;
 
+import java.lang.reflect.Field;
+
 import org.springframework.core.GenericTypeResolver;
-import org.springframework.hateoas.core.EvoInflectorRelProvider;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.server.LinkBuilder;
+import org.springframework.hateoas.server.RelProvider;
+import org.springframework.hateoas.server.SimpleRepresentationModelAssembler;
+import org.springframework.hateoas.server.core.EvoInflectorRelProvider;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.util.ReflectionUtils;
 
 /**
- * A {@link SimpleResourceAssembler} that mixes together a Spring web controller and a {@link RelProvider} to build links
+ * A {@link SimpleRepresentationModelAssembler} that mixes together a Spring web controller and a {@link RelProvider} to build links
  * upon a certain strategy.
  * 
  * @author Greg Turnquist
  */
-public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> implements SimpleResourceAssembler<T> {
+public class SimpleIdentifiableRepresentationModelAssembler<T> implements SimpleRepresentationModelAssembler<T> {
 
 	/**
 	 * The Spring MVC class for the {@link Identifiable} from which links will be built.
@@ -61,13 +67,13 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> impl
 	 * @param controllerClass - Spring MVC controller to base links off of
 	 * @param relProvider
 	 */
-	public SimpleIdentifiableResourceAssembler(Class<?> controllerClass, RelProvider relProvider) {
+	public SimpleIdentifiableRepresentationModelAssembler(Class<?> controllerClass, RelProvider relProvider) {
 
 		this.controllerClass = controllerClass;
 		this.relProvider = relProvider;
 
-		// Find the "T" type contained in "T extends Identifiable<?>", e.g. SimpleIdentifiableResourceAssembler<User> -> User
-		this.resourceType = GenericTypeResolver.resolveTypeArgument(this.getClass(), SimpleIdentifiableResourceAssembler.class);
+		// Find the "T" type contained in "T extends Identifiable<?>", e.g. SimpleIdentifiableRepresentationModelAssembler<User> -> User
+		this.resourceType = GenericTypeResolver.resolveTypeArgument(this.getClass(), SimpleIdentifiableRepresentationModelAssembler.class);
 	}
 
 	/**
@@ -75,7 +81,7 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> impl
 	 * 
 	 * @param controllerClass
 	 */
-	public SimpleIdentifiableResourceAssembler(Class<?> controllerClass) {
+	public SimpleIdentifiableRepresentationModelAssembler(Class<?> controllerClass) {
 		this(controllerClass, new EvoInflectorRelProvider());
 	}
 
@@ -85,11 +91,18 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> impl
 	 *
 	 * @param resource
 	 */
-	@Override
-	public void addLinks(Resource<T> resource) {
+	public void addLinks(EntityModel<T> resource) {
 
-		resource.add(getCollectionLinkBuilder().slash(resource.getContent()).withSelfRel());
+		resource.add(getCollectionLinkBuilder().slash(getId(resource)).withSelfRel());
 		resource.add(getCollectionLinkBuilder().withRel(this.relProvider.getCollectionResourceRelFor(this.resourceType)));
+	}
+
+	private Object getId(EntityModel<T> resource) {
+
+		Field id = ReflectionUtils.findField(this.resourceType, "id");
+		ReflectionUtils.makeAccessible(id);
+
+		return ReflectionUtils.getField(id, resource.getContent());
 	}
 
 	/**
@@ -97,8 +110,7 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> impl
 	 *
 	 * @param resources
 	 */
-	@Override
-	public void addLinks(Resources<Resource<T>> resources) {
+	public void addLinks(CollectionModel<EntityModel<T>> resources) {
 		resources.add(getCollectionLinkBuilder().withSelfRel());
 	}
 
@@ -110,14 +122,14 @@ public class SimpleIdentifiableResourceAssembler<T extends Identifiable<?>> impl
 	 * objects will be serving resources at {@code /employees} and {@code /employees/1}.
 	 *
 	 * If this is not the case, simply override this method in your concrete instance, or resort to
-	 * overriding {@link #addLinks(Resource)} and {@link #addLinks(Resources)} where you have full control over exactly
+	 * overriding {@link #addLinks(EntityModel)} and {@link #addLinks(CollectionModel)} where you have full control over exactly
 	 * what links are put in the individual and collection resources.
 	 *
 	 * @return
 	 */
 	protected LinkBuilder getCollectionLinkBuilder() {
 
-		ControllerLinkBuilder linkBuilder = linkTo(this.controllerClass);
+		WebMvcLinkBuilder linkBuilder = linkTo(this.controllerClass);
 
 		for (String pathComponent : (getPrefix() + this.relProvider.getCollectionResourceRelFor(this.resourceType)).split("/")) {
 			if (!pathComponent.isEmpty()) {

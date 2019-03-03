@@ -15,7 +15,7 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,10 +50,10 @@ class EmployeeController {
 	}
 
 	@GetMapping("/employees")
-	ResponseEntity<Resources<Resource<Employee>>> findAll() {
+	ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 
-		List<Resource<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
-			.map(employee -> new Resource<>(employee,
+		List<EntityModel<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
+			.map(employee -> new EntityModel<>(employee,
 				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
 					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
 					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
@@ -60,7 +61,7 @@ class EmployeeController {
 			))
 			.collect(Collectors.toList());
 
-		return ResponseEntity.ok(new Resources<>(employeeResources,
+		return ResponseEntity.ok(new CollectionModel<>(employeeResources,
 			linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()
 				.andAffordance(afford(methodOn(EmployeeController.class).newEmployee(null)))));
 	}
@@ -70,12 +71,12 @@ class EmployeeController {
 
 		Employee savedEmployee = repository.save(employee);
 
-		return new Resource<>(savedEmployee,
+		return new EntityModel<>(savedEmployee,
 			linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).withSelfRel()
 				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, savedEmployee.getId())))
 				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(savedEmployee.getId()))),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
-		).getId()
+		).getLink(IanaLinkRelations.SELF)
 			.map(Link::getHref)
 			.map(href -> {
 				try {
@@ -89,10 +90,10 @@ class EmployeeController {
 	}
 
 	@GetMapping("/employees/{id}")
-	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+	ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
-			.map(employee -> new Resource<>(employee,
+			.map(employee -> new EntityModel<>(employee,
 				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
 					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
 					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
@@ -110,12 +111,12 @@ class EmployeeController {
 
 		Employee updatedEmployee = repository.save(employeeToUpdate);
 
-		return new Resource<>(updatedEmployee,
+		return new EntityModel<>(updatedEmployee,
 			linkTo(methodOn(EmployeeController.class).findOne(updatedEmployee.getId())).withSelfRel()
 				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, updatedEmployee.getId())))
 				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(updatedEmployee.getId()))),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")
-		).getId()
+		).getLink(IanaLinkRelations.SELF)
 			.map(Link::getHref)
 			.map(href -> {
 				try {

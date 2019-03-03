@@ -15,14 +15,14 @@
  */
 package org.springframework.hateoas.examples;
 
-import org.springframework.hateoas.SimpleIdentifiableResourceAssembler;
+import org.springframework.hateoas.SimpleIdentifiableRepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
 /**
  * @author Greg Turnquist
  */
 @Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
+class EmployeeResourceAssembler extends SimpleIdentifiableRepresentationModelAssembler<Employee> {
 
 	EmployeeResourceAssembler() {
 		super(EmployeeController.class);

@@ -15,7 +15,7 @@
  */
 package org.springframework.hateoas.examples;
 
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,10 +37,10 @@ public class SupervisorController {
 	}
 
 	@GetMapping("/supervisors/{id}")
-	public ResponseEntity<Resource<Supervisor>> findOne(@PathVariable Long id) {
+	public ResponseEntity<EntityModel<Supervisor>> findOne(@PathVariable Long id) {
 
-		Resource<Manager> managerResource = controller.findOne(id).getBody();
-		Resource<Supervisor> supervisorResource = new Resource<>(
+		EntityModel<Manager> managerResource = controller.findOne(id).getBody();
+		EntityModel<Supervisor> supervisorResource = new EntityModel<>(
 			new Supervisor(managerResource.getContent()),
 			managerResource.getLinks());
 

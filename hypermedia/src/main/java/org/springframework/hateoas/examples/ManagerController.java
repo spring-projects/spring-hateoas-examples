@@ -15,8 +15,8 @@
  */
 package org.springframework.hateoas.examples;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,9 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 class ManagerController {
 
 	private final ManagerRepository repository;
-	private final ManagerResourceAssembler assembler;
+	private final ManagerRepresentationModelAssembler assembler;
 
-	ManagerController(ManagerRepository repository, ManagerResourceAssembler assembler) {
+	ManagerController(ManagerRepository repository, ManagerRepresentationModelAssembler assembler) {
 
 		this.repository = repository;
 		this.assembler = assembler;
@@ -39,28 +39,28 @@ class ManagerController {
 
 	/**
 	 * Look up all managers, and transform them into a REST collection resource using
-	 * {@link ManagerResourceAssembler#toResources(Iterable)}. Then return them through
+	 * {@link ManagerRepresentationModelAssembler#toCollectionModel(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 */
 	@GetMapping("/managers")
-	ResponseEntity<Resources<Resource<Manager>>> findAll() {
+	ResponseEntity<CollectionModel<EntityModel<Manager>>> findAll() {
 		return ResponseEntity.ok(
-			assembler.toResources(repository.findAll()));
+			assembler.toCollectionModel(repository.findAll()));
 
 	}
 
 	/**
 	 * Look up a single {@link Manager} and transform it into a REST resource using
-	 * {@link ManagerResourceAssembler#toResource(Object)}. Then return it through
+	 * {@link ManagerRepresentationModelAssembler#toModel(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
 	 * @param id
 	 */
 	@GetMapping("/managers/{id}")
-	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
+	ResponseEntity<EntityModel<Manager>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
-			.map(assembler::toResource)
+			.map(assembler::toModel)
 			.map(ResponseEntity::ok)
 			.orElse(ResponseEntity.notFound().build());
 	}
@@ -72,8 +72,8 @@ class ManagerController {
 	 * @return
 	 */
 	@GetMapping("/employees/{id}/manager")
-	ResponseEntity<Resource<Manager>> findManager(@PathVariable long id) {
+	ResponseEntity<EntityModel<Manager>> findManager(@PathVariable long id) {
 		return ResponseEntity.ok(
-			assembler.toResource(repository.findByEmployeesId(id)));
+			assembler.toModel(repository.findByEmployeesId(id)));
 	}
 }

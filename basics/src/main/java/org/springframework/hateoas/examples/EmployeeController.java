@@ -15,8 +15,8 @@
  */
 package org.springframework.hateoas.examples;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Spring Web {@link RestController} used to generate a REST API.
  *
- * Works by injecting an {@link EmployeeRepository} and an {@link EmployeeResourceAssembler} in the constructor, both
+ * Works by injecting an {@link EmployeeRepository} and an {@link EmployeeRepresentationModelAssembler} in the constructor, both
  * of which are used to retrieve data from the database, and assemble a REST resource.
  *
  * @author Greg Turnquist
@@ -34,9 +34,9 @@ import org.springframework.web.bind.annotation.RestController;
 class EmployeeController {
 
 	private final EmployeeRepository repository;
-	private final EmployeeResourceAssembler assembler;
+	private final EmployeeRepresentationModelAssembler assembler;
 
-	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler) {
+	EmployeeController(EmployeeRepository repository, EmployeeRepresentationModelAssembler assembler) {
 		
 		this.repository = repository;
 		this.assembler = assembler;
@@ -44,29 +44,29 @@ class EmployeeController {
 
 	/**
 	 * Look up all employees, and transform them into a REST collection resource using
-	 * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
+	 * {@link EmployeeRepresentationModelAssembler#toCollectionModel(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 */
 	@GetMapping("/employees")
-	public ResponseEntity<Resources<Resource<Employee>>> findAll() {
+	public ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 		
 		return ResponseEntity.ok(
-			this.assembler.toResources(this.repository.findAll()));
+			this.assembler.toCollectionModel(this.repository.findAll()));
 
 	}
 
 	/**
 	 * Look up a single {@link Employee} and transform it into a REST resource using
-	 * {@link EmployeeResourceAssembler#toResource(Object)}. Then return it through
+	 * {@link EmployeeRepresentationModelAssembler#toModel(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
 	 * @param id
 	 */
 	@GetMapping("/employees/{id}")
-	public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+	public ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 		return this.repository.findById(id)
-			.map(this.assembler::toResource)
+			.map(this.assembler::toModel)
 			.map(ResponseEntity::ok)
 			.orElse(ResponseEntity.notFound().build());
 	}

@@ -25,8 +25,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
-import org.springframework.hateoas.Identifiable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -35,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Data
 @Entity
 @NoArgsConstructor
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;

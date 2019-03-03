@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(EmployeeController.class)
-@Import({EmployeeResourceAssembler.class})
+@Import({EmployeeRepresentationModelAssembler.class})
 public class EmployeeControllerTests {
 
 	@Autowired

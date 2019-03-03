@@ -25,15 +25,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.springframework.hateoas.Identifiable;
-
 /**
  * @author Greg Turnquist
  */
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;

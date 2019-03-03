@@ -18,8 +18,8 @@ package org.springframework.hateoas.examples;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,10 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
 class EmployeeController {
 
 	private final EmployeeRepository repository;
-	private final EmployeeResourceAssembler assembler;
+	private final EmployeeRepresentationModelAssembler assembler;
 	private final EmployeeWithManagerResourceAssembler employeeWithManagerResourceAssembler;
 
-	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler,
+	EmployeeController(EmployeeRepository repository, EmployeeRepresentationModelAssembler assembler,
 					   EmployeeWithManagerResourceAssembler employeeWithManagerResourceAssembler) {
 
 		this.repository = repository;
@@ -45,28 +45,28 @@ class EmployeeController {
 
 	/**
 	 * Look up all employees, and transform them into a REST collection resource using
-	 * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
+	 * {@link EmployeeRepresentationModelAssembler#toCollectionModel(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 */
 	@GetMapping("/employees")
-	public ResponseEntity<Resources<Resource<Employee>>> findAll() {
+	public ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 		return ResponseEntity.ok(
-			assembler.toResources(repository.findAll()));
+			assembler.toCollectionModel(repository.findAll()));
 
 	}
 
 	/**
 	 * Look up a single {@link Employee} and transform it into a REST resource using
-	 * {@link EmployeeResourceAssembler#toResource(Object)}. Then return it through
+	 * {@link EmployeeRepresentationModelAssembler#toModel(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
 	 * @param id
 	 */
 	@GetMapping("/employees/{id}")
-	public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+	public ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
-			.map(assembler::toResource)
+			.map(assembler::toModel)
 			.map(ResponseEntity::ok)
 			.orElse(ResponseEntity.notFound().build());
 	}
@@ -78,27 +78,27 @@ class EmployeeController {
 	 * @return
 	 */
 	@GetMapping("/managers/{id}/employees")
-	public ResponseEntity<Resources<Resource<Employee>>> findEmployees(@PathVariable long id) {
+	public ResponseEntity<CollectionModel<EntityModel<Employee>>> findEmployees(@PathVariable long id) {
 		return ResponseEntity.ok(
-			assembler.toResources(repository.findByManagerId(id)));
+			assembler.toCollectionModel(repository.findByManagerId(id)));
 	}
 
 	@GetMapping("/employees/detailed")
-	public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedEmployees() {
+	public ResponseEntity<CollectionModel<EntityModel<EmployeeWithManager>>> findAllDetailedEmployees() {
 
 		return ResponseEntity.ok(
-			employeeWithManagerResourceAssembler.toResources(
+			employeeWithManagerResourceAssembler.toCollectionModel(
 				StreamSupport.stream(repository.findAll().spliterator(), false)
 					.map(EmployeeWithManager::new)
 					.collect(Collectors.toList())));
 	}
 
 	@GetMapping("/employees/{id}/detailed")
-	public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
+	public ResponseEntity<EntityModel<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
 
 		return repository.findById(id)
 			.map(EmployeeWithManager::new)
-			.map(employeeWithManagerResourceAssembler::toResource)
+			.map(employeeWithManagerResourceAssembler::toModel)
 			.map(ResponseEntity::ok)
 			.orElse(ResponseEntity.notFound().build());
 	}

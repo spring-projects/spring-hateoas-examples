@@ -15,7 +15,7 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,16 +54,16 @@ class EmployeeController {
 	 * Then return them through Spring Web's {@link ResponseEntity} fluent API.
 	 */
 	@GetMapping("/employees")
-	ResponseEntity<Resources<Resource<Employee>>> findAll() {
+	ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 
-		List<Resource<Employee>> employees = StreamSupport.stream(repository.findAll().spliterator(), false)
-			.map(employee -> new Resource<>(employee,
+		List<EntityModel<Employee>> employees = StreamSupport.stream(repository.findAll().spliterator(), false)
+			.map(employee -> new EntityModel<>(employee,
 				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel(),
 				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 			.collect(Collectors.toList());
 
 		return ResponseEntity.ok(
-			new Resources<>(employees,
+			new CollectionModel<>(employees,
 				linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()));
 	}
 
@@ -72,11 +73,11 @@ class EmployeeController {
 		try {
 			Employee savedEmployee = repository.save(employee);
 
-			Resource<Employee> employeeResource = new Resource<>(savedEmployee,
+			EntityModel<Employee> employeeResource = new EntityModel<>(savedEmployee,
 				linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).withSelfRel());
 
 			return ResponseEntity
-				.created(new URI(employeeResource.getRequiredLink(Link.REL_SELF).getHref()))
+				.created(new URI(employeeResource.getRequiredLink(IanaLinkRelations.SELF).getHref()))
 				.body(employeeResource);
 		} catch (URISyntaxException e) {
 			return ResponseEntity.badRequest().body("Unable to create " + employee);
@@ -90,10 +91,10 @@ class EmployeeController {
 	 * @param id
 	 */
 	@GetMapping("/employees/{id}")
-	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+	ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
-			.map(employee -> new Resource<>(employee,
+			.map(employee -> new EntityModel<>(employee,
 				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel(),
 				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 			.map(ResponseEntity::ok)

@@ -15,30 +15,30 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.SimpleIdentifiableResourceAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.SimpleIdentifiableRepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
 /**
  * @author Greg Turnquist
  */
 @Component
-class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manager> {
+class ManagerRepresentationModelAssembler extends SimpleIdentifiableRepresentationModelAssembler<Manager> {
 
-	ManagerResourceAssembler() {
+	ManagerRepresentationModelAssembler() {
 		super(ManagerController.class);
 	}
 
 	/**
-	 * Retain default links provided by {@link SimpleIdentifiableResourceAssembler}, but add extra ones to each {@link Manager}.
+	 * Retain default links provided by {@link SimpleIdentifiableRepresentationModelAssembler}, but add extra ones to each {@link Manager}.
 	 *
 	 * @param resource
 	 */
 	@Override
-	public void addLinks(Resource<Manager> resource) {
+	public void addLinks(EntityModel<Manager> resource) {
 		/**
 		 * Retain default links.
 		 */
@@ -57,7 +57,7 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 	 * @param resources
 	 */
 	@Override
-	public void addLinks(Resources<Resource<Manager>> resources) {
+	public void addLinks(CollectionModel<EntityModel<Manager>> resources) {
 
 		super.addLinks(resources);
 
