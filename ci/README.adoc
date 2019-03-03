@@ -1,0 +1,5 @@
+== Concourse CI
+
+Spring HATEOAS Examples is built using Concourse as it's CI tool of choice.
+
+The pipeline is defined on https://github.com/spring-projects/spring-hateoas[Spring HATEOAS], it's parent project.

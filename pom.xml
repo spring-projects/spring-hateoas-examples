@@ -63,13 +63,31 @@
 	</properties>
 
 	<profiles>
-		
+
 		<profile>
-			<id>spring5-next</id>
+			<id>spring51-next</id>
 			<properties>
-				<spring.version>5.0.2.BUILD-SNAPSHOT</spring.version>
-				<jackson.version>2.9.2</jackson.version>
+				<spring.version>5.1.6.BUILD-SNAPSHOT</spring.version>
 			</properties>
+			<repositories>
+				<repository>
+					<id>spring-libs-snapshot</id>
+					<url>http://repo.spring.io/libs-snapshot</url>
+				</repository>
+			</repositories>
+		</profile>
+
+		<profile>
+			<id>spring52-next</id>
+			<properties>
+				<spring.version>5.2.0.BUILD-SNAPSHOT</spring.version>
+			</properties>
+			<repositories>
+				<repository>
+					<id>spring-libs-snapshot</id>
+					<url>http://repo.spring.io/libs-snapshot</url>
+				</repository>
+			</repositories>
 		</profile>
 
 	</profiles>

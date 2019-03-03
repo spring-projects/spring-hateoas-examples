@@ -1,0 +1,21 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: openjdk
+    tag: 8-jdk
+
+inputs:
+- name: spring-hateoas-examples-artifactory
+- name: spring-hateoas-examples-github
+
+run:
+  path: spring-hateoas-examples-github/ci/sync-to-maven-central.sh
+
+params:
+  BINTRAY_USERNAME:
+  BINTRAY_API_KEY:
+  SONATYPE_USER_TOKEN:
+  SONATYPE_PASSWORD_TOKEN:
