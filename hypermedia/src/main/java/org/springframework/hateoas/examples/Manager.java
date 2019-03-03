@@ -37,15 +37,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @NoArgsConstructor
 class Manager {
 
-	@Id @GeneratedValue
-	private Long id;
+	@Id @GeneratedValue private Long id;
 	private String name;
 
 	/**
 	 * To break the recursive, bi-directional interface, don't serialize {@literal employees}.
 	 */
-	@JsonIgnore
-	@OneToMany(mappedBy = "manager")
+	@JsonIgnore //
+	@OneToMany(mappedBy = "manager") //
 	private List<Employee> employees = new ArrayList<>();
 
 	Manager(String name) {

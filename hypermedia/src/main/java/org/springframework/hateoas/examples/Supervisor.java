@@ -30,16 +30,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * @author Greg Turnquist
  */
 @Value
-@JsonPropertyOrder({"id", "name", "employees"})
+@JsonPropertyOrder({ "id", "name", "employees" })
 class Supervisor {
 
-	@JsonIgnore
-	private final Manager manager;
+	@JsonIgnore private final Manager manager;
 
 	public Long getId() {
 
-		return this.manager.getId()
-			.orElseThrow(() -> new RuntimeException("Couldn't find anything"));
+		return this.manager.getId() //
+				.orElseThrow(() -> new RuntimeException("Couldn't find anything"));
 	}
 
 	public String getName() {
@@ -47,8 +46,9 @@ class Supervisor {
 	}
 
 	public List<String> getEmployees() {
-		return manager.getEmployees().stream()
-			.map(employee -> employee.getName() + "::" + employee.getRole())
-			.collect(Collectors.toList());
+
+		return manager.getEmployees().stream() //
+				.map(employee -> employee.getName() + "::" + employee.getRole()) //
+				.collect(Collectors.toList());
 	}
 }

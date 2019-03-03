@@ -17,8 +17,8 @@ package org.springframework.hateoas.examples;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.SimpleIdentifiableRepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +33,8 @@ class ManagerRepresentationModelAssembler extends SimpleIdentifiableRepresentati
 	}
 
 	/**
-	 * Retain default links provided by {@link SimpleIdentifiableRepresentationModelAssembler}, but add extra ones to each {@link Manager}.
+	 * Retain default links provided by {@link SimpleIdentifiableRepresentationModelAssembler}, but add extra ones to each
+	 * {@link Manager}.
 	 *
 	 * @param resource
 	 */
@@ -44,11 +45,11 @@ class ManagerRepresentationModelAssembler extends SimpleIdentifiableRepresentati
 		 */
 		super.addLinks(resource);
 
-		resource.getContent().getId()
-			.ifPresent(id -> {
-				// Add custom link to find all managed employees
-				resource.add(linkTo(methodOn(EmployeeController.class).findEmployees(id)).withRel("employees"));
-			});
+		resource.getContent().getId() //
+				.ifPresent(id -> { //
+					// Add custom link to find all managed employees
+					resource.add(linkTo(methodOn(EmployeeController.class).findEmployees(id)).withRel("employees"));
+				});
 	}
 
 	/**

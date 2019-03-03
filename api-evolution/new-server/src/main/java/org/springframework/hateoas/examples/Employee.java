@@ -28,8 +28,8 @@ import javax.persistence.Id;
 import org.springframework.util.StringUtils;
 
 /**
- * An updated domain object where {@literal name} has been replaced by {@literal firstName} and {@literal} lastName.
- * To easy migration, we need to support the old {@literal name} field with a getter and a setter.
+ * An updated domain object where {@literal name} has been replaced by {@literal firstName} and {@literal} lastName. To
+ * easy migration, we need to support the old {@literal name} field with a getter and a setter.
  * 
  * @author Greg Turnquist
  */
@@ -38,8 +38,7 @@ import org.springframework.util.StringUtils;
 @Entity
 class Employee {
 
-	@Id @GeneratedValue
-	private Long id;
+	@Id @GeneratedValue private Long id;
 	private String firstName;
 	private String lastName;
 	private String role;

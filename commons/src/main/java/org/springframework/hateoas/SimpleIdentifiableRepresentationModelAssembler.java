@@ -31,15 +31,15 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * A {@link SimpleRepresentationModelAssembler} that mixes together a Spring web controller and a {@link RelProvider} to build links
- * upon a certain strategy.
- * 
+ * A {@link SimpleRepresentationModelAssembler} that mixes together a Spring web controller and a {@link RelProvider} to
+ * build links upon a certain strategy.
+ *
  * @author Greg Turnquist
  */
 public class SimpleIdentifiableRepresentationModelAssembler<T> implements SimpleRepresentationModelAssembler<T> {
 
 	/**
-	 * The Spring MVC class for the {@link Identifiable} from which links will be built.
+	 * The Spring MVC class for the object from which links will be built.
 	 */
 	private final Class<?> controllerClass;
 
@@ -49,7 +49,7 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	@Getter private final RelProvider relProvider;
 
 	/**
-	 * A {@link Class} depicting the {@link Identifiable}'s type.
+	 * A {@link Class} depicting the object's type.
 	 */
 	@Getter private final Class<?> resourceType;
 
@@ -63,7 +63,6 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	 * of information, resources can be defined.
 	 *
 	 * @see #setBasePath(String) to adjust base path to something like "/api"/
-	 *
 	 * @param controllerClass - Spring MVC controller to base links off of
 	 * @param relProvider
 	 */
@@ -72,13 +71,15 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 		this.controllerClass = controllerClass;
 		this.relProvider = relProvider;
 
-		// Find the "T" type contained in "T extends Identifiable<?>", e.g. SimpleIdentifiableRepresentationModelAssembler<User> -> User
-		this.resourceType = GenericTypeResolver.resolveTypeArgument(this.getClass(), SimpleIdentifiableRepresentationModelAssembler.class);
+		// Find the "T" type contained in "T extends Identifiable<?>", e.g.
+		// SimpleIdentifiableRepresentationModelAssembler<User> -> User
+		this.resourceType = GenericTypeResolver.resolveTypeArgument(this.getClass(),
+				SimpleIdentifiableRepresentationModelAssembler.class);
 	}
 
 	/**
 	 * Alternate constructor that falls back to {@link EvoInflectorRelProvider}.
-	 * 
+	 *
 	 * @param controllerClass
 	 */
 	public SimpleIdentifiableRepresentationModelAssembler(Class<?> controllerClass) {
@@ -86,8 +87,8 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	}
 
 	/**
-	 * Add single item self link based on {@link Identifiable} and link back to aggregate root of the {@literal T} domain
-	 * type using {@link RelProvider#getCollectionResourceRelFor(Class)}}.
+	 * Add single item self link based on the object and link back to aggregate root of the {@literal T} domain type using
+	 * {@link RelProvider#getCollectionResourceRelFor(Class)}}.
 	 *
 	 * @param resource
 	 */
@@ -115,15 +116,12 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	}
 
 	/**
-	 * Build up a URI for the collection using the Spring web controller followed by the resource type transformed
-	 * by the {@link RelProvider}.
-	 *
-	 * Assumption is that an {@literal EmployeeController} serving up {@literal Employee}
-	 * objects will be serving resources at {@code /employees} and {@code /employees/1}.
-	 *
-	 * If this is not the case, simply override this method in your concrete instance, or resort to
-	 * overriding {@link #addLinks(EntityModel)} and {@link #addLinks(CollectionModel)} where you have full control over exactly
-	 * what links are put in the individual and collection resources.
+	 * Build up a URI for the collection using the Spring web controller followed by the resource type transformed by the
+	 * {@link RelProvider}. Assumption is that an {@literal EmployeeController} serving up {@literal Employee} objects
+	 * will be serving resources at {@code /employees} and {@code /employees/1}. If this is not the case, simply override
+	 * this method in your concrete instance, or resort to overriding {@link #addLinks(EntityModel)} and
+	 * {@link #addLinks(CollectionModel)} where you have full control over exactly what links are put in the individual
+	 * and collection resources.
 	 *
 	 * @return
 	 */
@@ -131,7 +129,8 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 
 		WebMvcLinkBuilder linkBuilder = linkTo(this.controllerClass);
 
-		for (String pathComponent : (getPrefix() + this.relProvider.getCollectionResourceRelFor(this.resourceType)).split("/")) {
+		for (String pathComponent : (getPrefix() + this.relProvider.getCollectionResourceRelFor(this.resourceType))
+				.split("/")) {
 			if (!pathComponent.isEmpty()) {
 				linkBuilder = linkBuilder.slash(pathComponent);
 			}

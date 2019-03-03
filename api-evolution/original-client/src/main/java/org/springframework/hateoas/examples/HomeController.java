@@ -48,11 +48,9 @@ public class HomeController {
 	}
 
 	/**
-	 * Get a listing of ALL {@link Employee}s by querying the remote services' root URI, and then
-	 * "hopping" to the {@literal employees} rel.
-	 *
-	 * NOTE: Also create a form-backed {@link Employee} object to allow creating a new entry with
-	 * the Thymeleaf template.
+	 * Get a listing of ALL {@link Employee}s by querying the remote services' root URI, and then "hopping" to the
+	 * {@literal employees} rel. NOTE: Also create a form-backed {@link Employee} object to allow creating a new entry
+	 * with the Thymeleaf template.
 	 *
 	 * @param model
 	 * @return
@@ -62,9 +60,9 @@ public class HomeController {
 	public String index(Model model) throws URISyntaxException {
 
 		Traverson client = new Traverson(new URI(REMOTE_SERVICE_ROOT_URI), MediaTypes.HAL_JSON);
-		CollectionModel<EntityModel<Employee>> employees = client
-			.follow("employees")
-			.toObject(new CollectionModelType<EntityModel<Employee>>(){});
+		CollectionModel<EntityModel<Employee>> employees = client //
+				.follow("employees") //
+				.toObject(new CollectionModelType<EntityModel<Employee>>() {});
 
 		model.addAttribute("employee", new Employee());
 		model.addAttribute("employees", employees);
@@ -73,11 +71,9 @@ public class HomeController {
 	}
 
 	/**
-	 * Instead of putting the creation link from the remote service in the template (a security concern),
-	 * have a local route for {@literal POST} requests. Gather up the information, and form a remote call,
-	 * using {@link Traverson} to fetch the {@literal employees} {@link Link}.
-	 *
-	 * Once a new employee is created, redirect back to the root URL.
+	 * Instead of putting the creation link from the remote service in the template (a security concern), have a local
+	 * route for {@literal POST} requests. Gather up the information, and form a remote call, using {@link Traverson} to
+	 * fetch the {@literal employees} {@link Link}. Once a new employee is created, redirect back to the root URL.
 	 *
 	 * @param employee
 	 * @return
@@ -87,9 +83,9 @@ public class HomeController {
 	public String newEmployee(@ModelAttribute Employee employee) throws URISyntaxException {
 
 		Traverson client = new Traverson(new URI(REMOTE_SERVICE_ROOT_URI), MediaTypes.HAL_JSON);
-		Link employeesLink = client
-			.follow("employees")
-			.asLink();
+		Link employeesLink = client //
+				.follow("employees") //
+				.asLink();
 
 		this.rest.postForEntity(employeesLink.expand().getHref(), employee, Employee.class);
 

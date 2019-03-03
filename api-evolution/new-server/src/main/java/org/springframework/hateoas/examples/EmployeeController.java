@@ -17,9 +17,9 @@ package org.springframework.hateoas.examples;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,10 +46,10 @@ class EmployeeController {
 	public RepresentationModel root() {
 
 		RepresentationModel rootResource = new RepresentationModel();
-		
-		rootResource.add(
-			linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
-			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+
+		rootResource.add( //
+				linkTo(methodOn(EmployeeController.class).root()).withSelfRel(), //
+				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
 
 		return rootResource;
 	}
@@ -64,20 +64,19 @@ class EmployeeController {
 
 		Employee savedEmployee = repository.save(employee);
 
-		return savedEmployee.getId()
-			.map(id -> ResponseEntity
-				.created(linkTo(methodOn(EmployeeController.class).findOne(id)).toUri())
-				.body(assembler.toModel(savedEmployee)))
-			.orElse(ResponseEntity.notFound().build());
+		return savedEmployee.getId() //
+				.map(id -> ResponseEntity.created( //
+						linkTo(methodOn(EmployeeController.class).findOne(id)).toUri()).body(assembler.toModel(savedEmployee)))
+				.orElse(ResponseEntity.notFound().build());
 	}
 
 	@GetMapping("/employees/{id}")
 	public ResponseEntity<EntityModel<Employee>> findOne(@PathVariable Long id) {
 
-		return repository.findById(id)
-			.map(assembler::toModel)
-			.map(ResponseEntity::ok)
-			.orElse(ResponseEntity.notFound().build());
+		return repository.findById(id) //
+				.map(assembler::toModel) //
+				.map(ResponseEntity::ok) //
+				.orElse(ResponseEntity.notFound().build());
 	}
 
 }

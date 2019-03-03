@@ -35,7 +35,8 @@ class RootController {
 
 		resourceSupport.add(linkTo(methodOn(RootController.class).root()).withSelfRel());
 		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
-		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
+		resourceSupport
+				.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
 		resourceSupport.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
 
 		return ResponseEntity.ok(resourceSupport);

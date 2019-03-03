@@ -29,18 +29,14 @@ import javax.persistence.Id;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * Domain object representing a company employee. Project Lombok keeps actual code at a minimum.
- *
- * {@code @Data} - Generates getters, setters, toString, hash, and equals functions
- * {@code @Entity} - JPA annotation to flag this class for DB persistence
- * {@code @NoArgsConstructor} - Create a constructor with no args to support JPA
+ * Domain object representing a company employee. Project Lombok keeps actual code at a minimum. {@code @Data} -
+ * Generates getters, setters, toString, hash, and equals functions {@code @Entity} - JPA annotation to flag this class
+ * for DB persistence {@code @NoArgsConstructor} - Create a constructor with no args to support JPA
  * {@code @AllArgsConstructor} - Create a constructor with all args to support testing
- *
- * {@code @JsonIgnoreProperties(ignoreUnknow=true)}
- * When converting JSON to Java, ignore any unrecognized attributes. This is critical for REST because it
- * encourages adding new fields in later versions that won't break. It also allows things like _links to be
- * ignore as well, meaning HAL documents can be fetched and later posted to the server without adjustment.
- *
+ * {@code @JsonIgnoreProperties(ignoreUnknow=true)} When converting JSON to Java, ignore any unrecognized attributes.
+ * This is critical for REST because it encourages adding new fields in later versions that won't break. It also allows
+ * things like _links to be ignore as well, meaning HAL documents can be fetched and later posted to the server without
+ * adjustment.
  *
  * @author Greg Turnquist
  */
@@ -51,13 +47,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Employee {
 
-	@Id @GeneratedValue
-	private Long id;
-
+	@Id @GeneratedValue private Long id;
 	private String firstName;
-	
 	private String lastName;
-
 	private String role;
 
 	/**
@@ -79,14 +71,10 @@ class Employee {
 	}
 
 	/**
-	 * This method will create another piece of data in the REST resource representation. These types
-	 * of methods are key in supporting backward compatibility.
-	 *
-	 * By NOT removing old fields, and instead replacing them with methods like this, an API can evolve
-	 * without breaking old clients.
-	 *
-	 * Because of {@code @JsonIgnoreProperties} settings above, this attribute will be ignore if sent back
-	 * to the server, allowing API evolution.
+	 * This method will create another piece of data in the REST resource representation. These types of methods are key
+	 * in supporting backward compatibility. By NOT removing old fields, and instead replacing them with methods like
+	 * this, an API can evolve without breaking old clients. Because of {@code @JsonIgnoreProperties} settings above, this
+	 * attribute will be ignore if sent back to the server, allowing API evolution.
 	 * 
 	 * @return
 	 */

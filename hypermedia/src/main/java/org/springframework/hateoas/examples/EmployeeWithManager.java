@@ -26,16 +26,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * @author Greg Turnquist
  */
 @Value
-@JsonPropertyOrder({"id", "name", "role", "manager"})
+@JsonPropertyOrder({ "id", "name", "role", "manager" })
 public class EmployeeWithManager {
 
-	@JsonIgnore
-	private final Employee employee;
-	
+	@JsonIgnore private final Employee employee;
+
 	public Long getId() {
-		
-		return this.employee.getId()
-			.orElseThrow(() -> new RuntimeException("Couldn't find anything."));
+
+		return this.employee.getId() //
+				.orElseThrow(() -> new RuntimeException("Couldn't find anything."));
 	}
 
 	public String getName() {

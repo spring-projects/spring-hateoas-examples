@@ -17,9 +17,9 @@ package org.springframework.hateoas.examples;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,9 +47,9 @@ class EmployeeController {
 
 		RepresentationModel rootResource = new RepresentationModel();
 
-		rootResource.add(
-			linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
-			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+		rootResource.add( //
+				linkTo(methodOn(EmployeeController.class).root()).withSelfRel(), //
+				linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
 
 		return rootResource;
 	}
@@ -64,18 +64,18 @@ class EmployeeController {
 
 		Employee savedEmployee = repository.save(employee);
 
-		return ResponseEntity
-			.created(savedEmployee.getId()
-				.map(id -> linkTo(methodOn(EmployeeController.class).findOne(id)).toUri())
-				.orElseThrow(() -> new RuntimeException("Failed to create for some reason")))
-			.body(assembler.toModel(savedEmployee));
+		return ResponseEntity //
+				.created(savedEmployee.getId() //
+						.map(id -> linkTo(methodOn(EmployeeController.class).findOne(id)).toUri()) //
+						.orElseThrow(() -> new RuntimeException("Failed to create for some reason"))) //
+				.body(assembler.toModel(savedEmployee));
 	}
 
 	@GetMapping("/employees/{id}")
 	public EntityModel<Employee> findOne(@PathVariable Long id) {
-		return repository.findById(id)
-			.map(assembler::toModel)
-			.orElseThrow(() -> new RuntimeException("No employee '" + id + "' found"));
+		return repository.findById(id) //
+				.map(assembler::toModel) //
+				.orElseThrow(() -> new RuntimeException("No employee '" + id + "' found"));
 	}
 
 }

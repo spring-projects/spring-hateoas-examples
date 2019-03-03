@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Represent an older controller that has since been replaced with {@link ManagerController}.
- * This controller is used to provide legacy routes, i.e. backwards compatibility.
+ * Represent an older controller that has since been replaced with {@link ManagerController}. This controller is used to
+ * provide legacy routes, i.e. backwards compatibility.
  *
  * @author Greg Turnquist
  */
@@ -40,9 +40,10 @@ public class SupervisorController {
 	public ResponseEntity<EntityModel<Supervisor>> findOne(@PathVariable Long id) {
 
 		EntityModel<Manager> managerResource = controller.findOne(id).getBody();
-		EntityModel<Supervisor> supervisorResource = new EntityModel<>(
-			new Supervisor(managerResource.getContent()),
-			managerResource.getLinks());
+
+		EntityModel<Supervisor> supervisorResource = new EntityModel<>( //
+				new Supervisor(managerResource.getContent()), //
+				managerResource.getLinks());
 
 		return ResponseEntity.ok(supervisorResource);
 	}

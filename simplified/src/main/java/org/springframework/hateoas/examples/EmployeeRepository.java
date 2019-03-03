@@ -22,5 +22,4 @@ import org.springframework.data.repository.CrudRepository;
  *
  * @author Greg Turnquist
  */
-interface EmployeeRepository extends CrudRepository<Employee, Long> {
-}
+interface EmployeeRepository extends CrudRepository<Employee, Long> {}
