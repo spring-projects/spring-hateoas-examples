@@ -19,7 +19,7 @@ package org.springframework.hateoas.examples;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.hateoas.server.core.EvoInflectorRelProvider;
+import org.springframework.hateoas.server.core.EvoInflectorLinkRelationProvider;
 
 /**
  * @author Greg Turnquist
@@ -37,7 +37,7 @@ public class SpringHateoasSimplifiedApplication {
 	 * @return
 	 */
 	@Bean
-	EvoInflectorRelProvider relProvider() {
-		return new EvoInflectorRelProvider();
+	EvoInflectorLinkRelationProvider relProvider() {
+		return new EvoInflectorLinkRelationProvider();
 	}
 }

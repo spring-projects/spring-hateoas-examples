@@ -24,15 +24,15 @@ import java.lang.reflect.Field;
 
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.hateoas.server.LinkBuilder;
-import org.springframework.hateoas.server.RelProvider;
+import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.hateoas.server.SimpleRepresentationModelAssembler;
-import org.springframework.hateoas.server.core.EvoInflectorRelProvider;
+import org.springframework.hateoas.server.core.EvoInflectorLinkRelationProvider;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * A {@link SimpleRepresentationModelAssembler} that mixes together a Spring web controller and a {@link RelProvider} to
- * build links upon a certain strategy.
+ * A {@link SimpleRepresentationModelAssembler} that mixes together a Spring web controller and a
+ * {@link LinkRelationProvider} to build links upon a certain strategy.
  *
  * @author Greg Turnquist
  */
@@ -44,9 +44,9 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	private final Class<?> controllerClass;
 
 	/**
-	 * A {@link RelProvider} to look up names of links as options for resource paths.
+	 * A {@link LinkRelationProvider} to look up names of links as options for resource paths.
 	 */
-	@Getter private final RelProvider relProvider;
+	@Getter private final LinkRelationProvider relProvider;
 
 	/**
 	 * A {@link Class} depicting the object's type.
@@ -59,14 +59,14 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	@Getter @Setter private String basePath = "";
 
 	/**
-	 * Default a assembler based on Spring MVC controller, resource type, and {@link RelProvider}. With this combination
-	 * of information, resources can be defined.
+	 * Default a assembler based on Spring MVC controller, resource type, and {@link LinkRelationProvider}. With this
+	 * combination of information, resources can be defined.
 	 *
 	 * @see #setBasePath(String) to adjust base path to something like "/api"/
 	 * @param controllerClass - Spring MVC controller to base links off of
 	 * @param relProvider
 	 */
-	public SimpleIdentifiableRepresentationModelAssembler(Class<?> controllerClass, RelProvider relProvider) {
+	public SimpleIdentifiableRepresentationModelAssembler(Class<?> controllerClass, LinkRelationProvider relProvider) {
 
 		this.controllerClass = controllerClass;
 		this.relProvider = relProvider;
@@ -78,17 +78,17 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 	}
 
 	/**
-	 * Alternate constructor that falls back to {@link EvoInflectorRelProvider}.
+	 * Alternate constructor that falls back to {@link EvoInflectorLinkRelationProvider}.
 	 *
 	 * @param controllerClass
 	 */
 	public SimpleIdentifiableRepresentationModelAssembler(Class<?> controllerClass) {
-		this(controllerClass, new EvoInflectorRelProvider());
+		this(controllerClass, new EvoInflectorLinkRelationProvider());
 	}
 
 	/**
 	 * Add single item self link based on the object and link back to aggregate root of the {@literal T} domain type using
-	 * {@link RelProvider#getCollectionResourceRelFor(Class)}}.
+	 * {@link LinkRelationProvider#getCollectionResourceRelFor(Class)}}.
 	 *
 	 * @param resource
 	 */
@@ -117,9 +117,9 @@ public class SimpleIdentifiableRepresentationModelAssembler<T> implements Simple
 
 	/**
 	 * Build up a URI for the collection using the Spring web controller followed by the resource type transformed by the
-	 * {@link RelProvider}. Assumption is that an {@literal EmployeeController} serving up {@literal Employee} objects
-	 * will be serving resources at {@code /employees} and {@code /employees/1}. If this is not the case, simply override
-	 * this method in your concrete instance, or resort to overriding {@link #addLinks(EntityModel)} and
+	 * {@link LinkRelationProvider}. Assumption is that an {@literal EmployeeController} serving up {@literal Employee}
+	 * objects will be serving resources at {@code /employees} and {@code /employees/1}. If this is not the case, simply
+	 * override this method in your concrete instance, or resort to overriding {@link #addLinks(EntityModel)} and
 	 * {@link #addLinks(CollectionModel)} where you have full control over exactly what links are put in the individual
 	 * and collection resources.
 	 *
