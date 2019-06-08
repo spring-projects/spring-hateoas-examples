@@ -50,6 +50,12 @@ pipeline {
 		}
 
 		stage('Deploy to Artifactory') {
+			when {
+				anyOf {
+					branch 'master'
+					branch 'issue/*'
+				}
+			}
 			agent {
 				docker {
 					image 'springci/spring-hateoas-openjdk8-with-graphviz-and-jq:latest'
