@@ -99,7 +99,7 @@ pipeline {
 		}
 		stage('Promote to Bintray') {
 			when {
-				buildingTag()
+				tag "v*"
 			}
 			agent {
 				docker {
@@ -133,7 +133,7 @@ pipeline {
 		}
 		stage('Sync to Maven Central') {
 			when {
-				buildingTag()
+				tag "v*"
 			}
 			agent {
 				docker {
