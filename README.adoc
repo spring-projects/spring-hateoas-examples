@@ -20,3 +20,23 @@ We have separate folders for each of these:
 
 NOTE: The master branch tracks Spring HATEOAS 1.0, based upon Spring Boot 2 + Spring Framework 5.
 To see examples depicted against the 0.x branch (Spring 4.x) visit the https://github.com/spring-projects/spring-hateoas-examples/tree/0.x[0.x branch].
+
+=== Making a release
+
+1. Create a new release (on the main branch).
++
+----
+% ci/create-release.sh <release version> <next snapshot version>
+----
++
+2. With the release tagged, push the tagged version to the release branch.
++
+----
+% git checkout -b release
+% git reset --hard <tag>
+% git push -f origin release
+----
+
+NOTE: You can chain the previous set of commands together using `&&`.
+
+The pipeline will build and release the "release" branch. It will also build a new a new snapshot and stage it on artifactory.
