@@ -15,16 +15,6 @@
  */
 package org.springframework.hateoas.examples;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.Arrays;
-import java.util.Optional;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +25,18 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Greg Turnquist
@@ -58,7 +60,7 @@ public class EmployeeControllerTests {
 		mvc.perform(get("/employees").accept(MediaTypes.HAL_FORMS_JSON_VALUE)) //
 				.andDo(print()) //
 				.andExpect(status().isOk()) //
-				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE + ";charset=UTF-8"))
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE))
 
 				.andExpect(jsonPath("$._embedded.employees[0].id", is(1)))
 				.andExpect(jsonPath("$._embedded.employees[0].firstName", is("Frodo")))
@@ -113,7 +115,7 @@ public class EmployeeControllerTests {
 		mvc.perform(get("/employees/1").accept(MediaTypes.HAL_FORMS_JSON_VALUE)) //
 				.andDo(print()) //
 				.andExpect(status().isOk()) //
-				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE + ";charset=UTF-8"))
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_FORMS_JSON_VALUE))
 
 				.andExpect(jsonPath("$.id", is(1))) //
 				.andExpect(jsonPath("$.firstName", is("Frodo"))) //
