@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.hateoas.examples</groupId>
 	<artifactId>spring-hateoas-examples</artifactId>
-	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<version>0.1.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring HATEOAS - Examples</name>

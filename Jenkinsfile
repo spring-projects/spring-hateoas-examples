@@ -24,26 +24,26 @@ pipeline {
 
 		stage("Test other configurations") {
 			parallel {
-				stage("test: baseline (jdk11)") {
+				stage("test: spring5 (jdk8)") {
 					agent {
 						docker {
-							image 'adoptopenjdk/openjdk11:latest'
+							image 'adoptopenjdk/openjdk8:latest'
 							args '-v $HOME/.m2:/root/.m2'
 						}
 					}
 					steps {
-						sh "PROFILE=none ci/test.sh"
+						sh "PROFILE=spring5 ci/test.sh"
 					}
 				}
-				stage("test: baseline (jdk12)") {
+				stage("test: spring5-next (jdk8)") {
 					agent {
 						docker {
-							image 'adoptopenjdk/openjdk12:latest'
+							image 'adoptopenjdk/openjdk8:latest'
 							args '-v $HOME/.m2:/root/.m2'
 						}
 					}
 					steps {
-						sh "PROFILE=none ci/test.sh"
+						sh "PROFILE=spring5-next ci/test.sh"
 					}
 				}
 			}
@@ -99,7 +99,7 @@ pipeline {
 		}
 		stage('Promote to Bintray') {
 			when {
-				branch 'release'
+				branch 'release-0.x'
 			}
 			agent {
 				docker {
@@ -133,7 +133,7 @@ pipeline {
 		}
 		stage('Sync to Maven Central') {
 			when {
-				branch 'release'
+				branch 'release-0.x'
 			}
 			agent {
 				docker {
