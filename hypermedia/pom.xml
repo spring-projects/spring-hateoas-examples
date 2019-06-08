@@ -11,14 +11,14 @@
 	<parent>
 		<groupId>org.springframework.hateoas.examples</groupId>
 		<artifactId>spring-hateoas-examples</artifactId>
-		<version>1.0.0.BUILD-SNAPSHOT</version>
+		<version>0.1.0.BUILD-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.hateoas.examples</groupId>
 			<artifactId>commons</artifactId>
-			<version>1.0.0.BUILD-SNAPSHOT</version>
+			<version>0.1.0.BUILD-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
