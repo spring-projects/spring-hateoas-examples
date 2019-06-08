@@ -1,6 +1,7 @@
 = Spring HATEOAS Examples
 
-image:https://travis-ci.org/spring-projects/spring-hateoas-examples.svg?branch=master[Build Status,link=https://travis-ci.org/spring-projects/spring-hateoas-examples]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-hateoas-examples%2Fmaster&subject=master[link=https://jenkins.spring.io/view/SpringHATEOAS/job/spring-hateoas-examples/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-hateoas-examples%2F0.x&subject=0.x[link=https://jenkins.spring.io/view/SpringHATEOAS/job/spring-hateoas-examples/]
 
 This repository contains example projects to interact with Spring HATEOAS.
 
