@@ -15,3 +15,23 @@ We have separate folders for each of these:
 * link:basics[Basics] - Poke and prod at a hypermedia-powered service from inside the code as well as externally using standard tools
 * link:api-evolution[API Evolution] - Upgrade an existing REST resource
 * link:hypermedia[Hypermedia] - Create hypermedia-driven REST resources, linking them together, and supporting older links.
+
+=== Making a release
+
+1. Create a new release (on the main branch).
++
+----
+% ci/create-release.sh <release version> <next snapshot version>
+----
++
+2. With the release tagged, push the tagged version to the release branch.
++
+----
+% git checkout -b release-0.x
+% git reset --hard <tag>
+% git push -f origin release-0.x
+----
+
+NOTE: You can chain the previous set of commands together using `&&`.
+
+The pipeline will build and release the "release-0.x" branch. It will also build a new a new snapshot and stage it on artifactory.
