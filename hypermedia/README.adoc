@@ -141,19 +141,19 @@ class ManagerController {
 
 	/**
 	 * Look up all managers, and transform them into a REST collection resource using
-	 * {@link ManagerResourceAssembler#toResources(Iterable)}. Then return them through
+	 * {@link ManagerResourceAssembler#toCollectionModel(Iterable)}. Then return them through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 */
 	@GetMapping("/managers")
 	ResponseEntity<Resources<Resource<Manager>>> findAll() {
 		return ResponseEntity.ok(
-			assembler.toResources(repository.findAll()));
+			assembler.toCollectionModel(repository.findAll()));
 
 	}
 
 	/**
 	 * Look up a single {@link Manager} and transform it into a REST resource using
-	 * {@link ManagerResourceAssembler#toResource(Object)}. Then return it through
+	 * {@link ManagerResourceAssembler#toEntityModel(Object)}. Then return it through
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 *
 	 * @param id
@@ -161,7 +161,7 @@ class ManagerController {
 	@GetMapping("/managers/{id}")
 	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
 		return ResponseEntity.ok(
-			assembler.toResource(repository.findOne(id)));
+			assembler.toEntityModel(repository.findOne(id)));
 	}
 }
 ----
@@ -199,7 +199,7 @@ class EmployeeController {
 	@GetMapping("/managers/{id}/employees")
 	public ResponseEntity<Resources<Resource<Employee>>> findEmployees(@PathVariable long id) {
 		return ResponseEntity.ok(
-			assembler.toResources(repository.findByManagerId(id)));
+			assembler.toCollectionModel(repository.findByManagerId(id)));
 	}
 }
 ----
@@ -316,7 +316,7 @@ To support this, we can write the corresponding route in `EmployeeController`:
 public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedEmployees() {
 
 	return ResponseEntity.ok(
-		employeeWithManagerResourceAssembler.toResources(
+		employeeWithManagerResourceAssembler.toCollectionModel(
 			StreamSupport.stream(repository.findAll().spliterator(), false)
 				.map(EmployeeWithManager::new)
 				.collect(Collectors.toList())));
@@ -328,7 +328,7 @@ public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathV
 	Employee employee = repository.findOne(id);
 
 	return ResponseEntity.ok(
-		employeeWithManagerResourceAssembler.toResource(
+		employeeWithManagerResourceAssembler.toEntityModel(
 			new EmployeeWithManager(employee)));
 }
 ----
@@ -406,11 +406,11 @@ public ResponseEntity<?> findOne(@PathVariable long id,
 		Employee employee = repository.findOne(id);
 
 		return ResponseEntity.ok(
-			employeeWithManagerResourceAssembler.toResource(
+			employeeWithManagerResourceAssembler.toEntityModel(
 				new EmployeeWithManager(employee)));
 	} else {
 		return ResponseEntity.ok(
-			assembler.toResource(repository.findOne(id)));
+			assembler.toEntityModel(repository.findOne(id)));
 	}
 }
 ----

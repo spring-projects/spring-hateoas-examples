@@ -112,7 +112,7 @@ public ResponseEntity<Resource<Employee>> newEmployee(@RequestBody Employee empl
 
 	return ResponseEntity
 		.created(linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).toUri())
-		.body(assembler.toResource(savedEmployee));
+		.body(assembler.toEntityModel(savedEmployee));
 }
 ----
 
