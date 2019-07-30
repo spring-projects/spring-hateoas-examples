@@ -82,7 +82,7 @@ operations.
 In REST, the "thing" being linked to is a *resource*. Resources provide both information as well as information on _how_ to
 retrieve and update that information.
 
-Spring HATEOAS defines a generic `EntityModel<T>` container uased to model resources that lets store any domain object (`Employee` in this example), and
+Spring HATEOAS defines a generic `EntityModel<T>` container used to model resources that lets store any domain object (`Employee` in this example), and
 add additional links.
 
 IMPORTANT: Spring HATEOAS's `EntityModel` and `Link` classes are *vendor neutral*. HAL is thrown around a lot, being the
