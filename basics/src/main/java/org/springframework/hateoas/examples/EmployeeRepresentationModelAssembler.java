@@ -27,7 +27,7 @@ class EmployeeRepresentationModelAssembler extends SimpleIdentifiableRepresentat
 	/**
 	 * Link the {@link Employee} domain type to the {@link EmployeeController} using this
 	 * {@link SimpleIdentifiableRepresentationModelAssembler} in order to generate both
-	 * {@link org.springframework.hateoas.Resource} and {@link org.springframework.hateoas.CollectionModel}.
+	 * {@link org.springframework.hateoas.EntityModel} and {@link org.springframework.hateoas.CollectionModel}.
 	 */
 	EmployeeRepresentationModelAssembler() {
 		super(EmployeeController.class);
