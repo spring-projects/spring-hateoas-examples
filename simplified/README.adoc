@@ -55,7 +55,7 @@ operations.
 In REST, the "thing" being linked to is a *resource*. Resources provide both information as well as details on _how_ to
 retrieve and update that information.
 
-Spring HATEOAS defines a generic `Resource<T>` container that lets you store any domain object (`Employee` in this example), and
+Spring HATEOAS defines a generic `EntityModel<T>` container that lets you store any domain object (`Employee` in this example), and
 add additional links.
 
 IMPORTANT: Spring HATEOAS's `Resource` and `Link` classes are *vendor neutral*. HAL is thrown around a lot, being the
@@ -93,22 +93,22 @@ The route for the https://martinfowler.com/bliki/DDD_Aggregate.html[aggregate ro
  * Then return them through Spring Web's {@link ResponseEntity} fluent API.
  */
 @GetMapping("/employees")
-ResponseEntity<Resources<Resource<Employee>>> findAll() {
+ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 
-	List<Resource<Employee>> employees = StreamSupport.stream(repository.findAll().spliterator(), false)
-		.map(employee -> new Resource<>(employee,
+	List<EntityModel<Employee>> employees = StreamSupport.stream(repository.findAll().spliterator(), false)
+		.map(employee -> new EntityModel<>(employee,
 			linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel(),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 		.collect(Collectors.toList());
 
 	return ResponseEntity.ok(
-		new Resources<>(employees,
+		new CollectionModel<>(employees,
 			linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()));
 }
 ----
 
 It retrieves a collection of `Employee` objects, streams through a Java 8 spliterator, and converts them into a collection
-of `Resource<Employee>` objects by using Spring HATEOAS's `linkTo` and `methodOn` helpers to build links.
+of `EntityModel<Employee>` objects by using Spring HATEOAS's `linkTo` and `methodOn` helpers to build links.
 
 * The natural convention with REST endpoints is to serve a *self* link (denoted by the `.withSelfRel()` call).
 * It's also useful for any single item resource to include a link back to the aggregate (denoted by the `.withRel("employees")`).
@@ -117,7 +117,7 @@ The whole collection of single item resources is then wrapped in a Spring HATEOA
 
 NOTE: `Resources` is Spring HATEOAS's vendor neutral representation of a collection. It has it's
 own set of links, separate from the links of each member of the collection. That's why the whole
-structure is `Resources<Resource<Employee>>` and not `Resources<Employee>`.
+structure is `CollectionModel<EntityModel<Employee>>` and not `CollectionModel<Employee>`.
 
 To build a single resource, the `/employees/{id}` route is shown below:
 
@@ -130,10 +130,10 @@ To build a single resource, the `/employees/{id}` route is shown below:
  * @param id
  */
 @GetMapping("/employees/{id}")
-ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 	return repository.findById(id)
-		.map(employee -> new Resource<>(employee,
+		.map(employee -> new EntityModel<>(employee,
 			linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel(),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 		.map(ResponseEntity::ok)
@@ -142,7 +142,7 @@ ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
 ----
 
 This code is almost identical. It fetches a single item `Employee` from the database and that wraps up into a
-`Resource<Employee>` object with the same links, but that's it. No need to create a `Resources` object since is NOT a
+`EntityModel<Employee>` object with the same links, but that's it. No need to create a `Resources` object since is NOT a
 collection.
 
 IMPORTANT: Does this look like duplicate code found in the aggregate root? Sures it does. That's why Spring HATEOAS

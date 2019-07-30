@@ -106,7 +106,7 @@ From there, we need to add the ability to create new employees:
 [source,java]
 ----
 @PostMapping("/employees")
-public ResponseEntity<Resource<Employee>> newEmployee(@RequestBody Employee employee) {
+public ResponseEntity<EntityModel<Employee>> newEmployee(@RequestBody Employee employee) {
 
 	Employee savedEmployee = repository.save(employee);
 
@@ -223,9 +223,9 @@ To construct a listing of all employees, check out the following controller meth
 public String index(Model model) throws URISyntaxException {
 
 	Traverson client = new Traverson(new URI(REMOTE_SERVICE_ROOT_URI), MediaTypes.HAL_JSON);
-	Resources<Resource<Employee>> employees = client
+	CollectionModel<EntityModel<Employee>> employees = client
 		.follow("employees")
-		.toObject(new ResourcesType<Resource<Employee>>(){});
+		.toObject(new ResourcesType<EntityModel<Employee>>(){});
 
 	model.addAttribute("employee", new Employee());
 	model.addAttribute("employees", employees);
@@ -237,7 +237,7 @@ public String index(Model model) throws URISyntaxException {
 Presuming you already understand Spring MVC, let's focus on the RESTful bits.
 
 * `Traverson` is used to start from the root node (*REMOTE_SERVICE_ROOT_URI*) and "hop" to *employees*.
-Then it fetches an object, and transforms it into Spring HATEOAS's vendor neutral `Resources<Resource<Employee>>` structure.
+Then it fetches an object, and transforms it into Spring HATEOAS's vendor neutral `CollectionModel<EntityModel<Employee>>` structure.
 * Using this, we are able to construct a `Model` object for the template.
 ** An *employee* object is created to hold an empty, form-backed bean.
 ** *employees* is loaded up with the entire Spring HATEOAS structure, allowing the template to use what bits it wants.
@@ -274,7 +274,7 @@ It isn't necessary to post ALL of the Thymeleaf template `index.html`, but the c
 This shows the employee data being served up inside an HTML table.
 
 * `th:each="employee : ${employees}"` lets your iterate over each one.
-* `th:text="${employee.content.name}"` navigates the `Resource<Employee>` structure (remmeber, you're iterating over each entry of `Resources<>`).
+* `th:text="${employee.content.name}"` navigates the `EntityModel<Employee>` structure (remmeber, you're iterating over each entry of `CollectionModel<>`).
 * `${employee.links}` gives each entry access to a Spring HATEOAS `Link`.
 * `<a th:text="${link.rel}" th:href="${link.href}" />` lets you show the end user each link, both name and URI.
 

@@ -145,7 +145,7 @@ class ManagerController {
 	 * Spring Web's {@link ResponseEntity} fluent API.
 	 */
 	@GetMapping("/managers")
-	ResponseEntity<Resources<Resource<Manager>>> findAll() {
+	ResponseEntity<CollectionModel<EntityModel<Manager>>> findAll() {
 		return ResponseEntity.ok(
 			assembler.toCollectionModel(repository.findAll()));
 
@@ -159,7 +159,7 @@ class ManagerController {
 	 * @param id
 	 */
 	@GetMapping("/managers/{id}")
-	ResponseEntity<Resource<Manager>> findOne(@PathVariable long id) {
+	ResponseEntity<EntityModel<Manager>> findOne(@PathVariable long id) {
 		return ResponseEntity.ok(
 			assembler.toEntityModel(repository.findOne(id)));
 	}
@@ -197,7 +197,7 @@ class EmployeeController {
 	 * @return
 	 */
 	@GetMapping("/managers/{id}/employees")
-	public ResponseEntity<Resources<Resource<Employee>>> findEmployees(@PathVariable long id) {
+	public ResponseEntity<CollectionModel<EntityModel<Employee>>> findEmployees(@PathVariable long id) {
 		return ResponseEntity.ok(
 			assembler.toCollectionModel(repository.findByManagerId(id)));
 	}
@@ -237,7 +237,7 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 	 * @param resource
 	 */
 	@Override
-	protected void addLinks(Resource<Manager> resource) {
+	protected void addLinks(EntityModel<Manager> resource) {
 		/**
 		 * Retain default links.
 		 */
@@ -313,7 +313,7 @@ To support this, we can write the corresponding route in `EmployeeController`:
 [source,java]
 ----
 @GetMapping("/employees/detailed")
-public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedEmployees() {
+public ResponseEntity<CollectionModel<EntityModel<EmployeeWithManager>>> findAllDetailedEmployees() {
 
 	return ResponseEntity.ok(
 		employeeWithManagerResourceAssembler.toCollectionModel(
@@ -323,7 +323,7 @@ public ResponseEntity<Resources<Resource<EmployeeWithManager>>> findAllDetailedE
 }
 
 @GetMapping("/employees/{id}/detailed")
-public ResponseEntity<Resource<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
+public ResponseEntity<EntityModel<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
 
 	Employee employee = repository.findOne(id);
 
@@ -352,7 +352,7 @@ class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<Emplo
 	 * @param resource
 	 */
 	@Override
-	protected void addLinks(Resource<EmployeeWithManager> resource) {
+	protected void addLinks(EntityModel<EmployeeWithManager> resource) {
 
 		resource.add(linkTo(methodOn(EmployeeController.class).findDetailedEmployee(resource.getContent().getId())).withSelfRel());
 		resource.add(linkTo(methodOn(EmployeeController.class).findOne(resource.getContent().getId())).withRel("summary"));
@@ -365,7 +365,7 @@ class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<Emplo
 	 * @param resources
 	 */
 	@Override
-	protected void addLinks(Resources<Resource<EmployeeWithManager>> resources) {
+	protected void addLinks(CollectionModel<EntityModel<EmployeeWithManager>> resources) {
 
 		resources.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withSelfRel());
 		resources.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
@@ -380,8 +380,8 @@ This has a handful of differences from the `ResourceAssembler` objects you've bu
 * Since the routes are different than traditional */employees* and */employees/{id}*, it makes no sense to use `SimpleIdentifiableResourceAssembler<T>`.
  So instead, you want to fall back to `SimpleResourceAssembler<EmployeeWithManager>`, in which NO links are defined out of the box.
 * Because there are no defined routes, you are in full control.
-** `addLinks(Resource<EmployeeWithManager> resource)` defines links for single items
-** `addLinks(Resources<Resource<EmployeeWithManager>> resources)` defines links for collections
+** `addLinks(EntityModel<EmployeeWithManager> resource)` defines links for single items
+** `addLinks(CollectionModel<EntityModel<EmployeeWithManager>> resources)` defines links for collections
 
 In this case, single `EmployeeWithManager` items include a self link to itself, a hop to it's parallel record that only has `Employee` info known as *summary*,
 and a link to the detailed collection. To avoid semantic confusion, this is called *detailedEmployees* given *employees* is the common reference to
@@ -389,7 +389,7 @@ a collection of summary `Employee` records.
 
 It also makes sense to add links from the other existing REST resources to this detailed `EmployeeWithManager`.
 
-WARNING: Even though `addLinks(Resources<Resource<EmployeeWithManager>> resources)` gives you access to a single item's `Resource<T>` object,
+WARNING: Even though `addLinks(CollectionModel<EntityModel<EmployeeWithManager>> resources)` gives you access to a single item's `EntityModel<T>` object,
  it is recommended to NOT manipulate individual item links this way. Instead, use the other method.
 
 Is this the _only_ way to display a detailed record? Not at all. Spring MVC supports request parameters, so it's not that difficult
@@ -522,10 +522,10 @@ public class SupervisorController {
 	}
 
 	@GetMapping("/supervisors/{id}")
-	public ResponseEntity<Resource<Supervisor>> findOne(@PathVariable Long id) {
+	public ResponseEntity<EntityModel<Supervisor>> findOne(@PathVariable Long id) {
 
-		Resource<Manager> managerResource = controller.findOne(id).getBody();
-		Resource<Supervisor> supervisorResource = new Resource<>(
+		EntityModel<Manager> managerResource = controller.findOne(id).getBody();
+		EntityModel<Supervisor> supervisorResource = new EntityModel<>(
 			new Supervisor(managerResource.getContent()),
 			managerResource.getLinks());
 
@@ -535,17 +535,17 @@ public class SupervisorController {
 ----
 
 In this example, the assumption is that there was a route for individual supervisors, but not a link for a collection.
-This controller has that route, and serves up a `Resource<Supervisor>` record. But instead of fetching the data directly,
+This controller has that route, and serves up a `EntityModel<Supervisor>` record. But instead of fetching the data directly,
 it leverages the `ManagerController`.
 
 Is that a good idea or a bad idea?
 
 Again, there are tradeoffs. This example is meant to illustrate other options. In this case, leveraging `ManagerController`
-allows all links to be generated courtesy of the `ManagerResourceAssembler`. When a `ResponseEntity<Resource<Manager>>` object
+allows all links to be generated courtesy of the `ManagerResourceAssembler`. When a `ResponseEntity<EntityModel<Manager>>` object
 is returned by the controller, its wrapped REST resource is extracted by Spring MVC's `getBody()` method.
 
 A new `Supervisor` REST resource is constructed by injecting the `Manager` into a `Supervisor` DTO. The provided links are
-then copied into that `Resource<Supervisor>` object.
+then copied into that `EntityModel<Supervisor>` object.
 
 Hence, this controller will respond to calls for */supervisors/{id}*, but provide links onto the new system should the client
 want to gracefully start migrating.

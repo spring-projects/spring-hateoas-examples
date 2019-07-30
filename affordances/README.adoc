@@ -125,10 +125,10 @@ class EmployeeController {
 	...
 
 	@GetMapping("/employees")
-	ResponseEntity<Resources<Resource<Employee>>> findAll() {
+	ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 
-		List<Resource<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
-			.map(employee -> new Resource<>(employee,
+		List<EntityModel<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
+			.map(employee -> new EntityModel<>(employee,
 				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
 					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
 					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
@@ -136,7 +136,7 @@ class EmployeeController {
 			))
 			.collect(Collectors.toList());
 
-		return ResponseEntity.ok(new Resources<>(employeeResources,
+		return ResponseEntity.ok(new CollectionModel<>(employeeResources,
 			linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()
 				.andAffordance(afford(methodOn(EmployeeController.class).newEmployee(null)))));
 	}
@@ -146,7 +146,7 @@ class EmployeeController {
 
 		Employee savedEmployee = repository.save(employee);
 
-		return new Resource<>(savedEmployee,
+		return new EntityModel<>(savedEmployee,
 			linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).withSelfRel()
 				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, savedEmployee.getId())))
 				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(savedEmployee.getId()))),
@@ -171,7 +171,7 @@ class EmployeeController {
 Look at these controller details:
 
 * A *GET* call for the aggregate collection is laid out. It uses the repository's `findAll()` method and transforms it
-into a `Resources<Resource<Employee>>`.
+into a `CollectionModel<EntityModel<Employee>>`.
 * A *POST* call for creating new employees is also defined, on the same URI. `@RequestBody` tells Spring MVC to deserialize
 the request body into an `Employee` object, which is then sent through the repository's `save()` operation. From there,
 it's wrapped as a `Resource` with links added to itself and to the aggregate root. Finally a `Location` response header
@@ -204,10 +204,10 @@ class EmployeeController {
 	...
 
 	@GetMapping("/employees/{id}")
-	ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+	ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
-			.map(employee -> new Resource<>(employee,
+			.map(employee -> new EntityModel<>(employee,
 				linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
 					.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
 					.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
@@ -225,7 +225,7 @@ class EmployeeController {
 
 		Employee updatedEmployee = repository.save(employeeToUpdate);
 
-		return new Resource<>(updatedEmployee,
+		return new EntityModel<>(updatedEmployee,
 			linkTo(methodOn(EmployeeController.class).findOne(updatedEmployee.getId())).withSelfRel()
 				.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, updatedEmployee.getId())))
 				.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(updatedEmployee.getId()))),
