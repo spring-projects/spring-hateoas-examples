@@ -157,23 +157,23 @@ The collection's route is shown below:
 ----
 /**
  * Look up all employees, and transform them into a REST collection resource using
- * {@link EmployeeResourceAssembler#toResources(Iterable)}. Then return them through
+ * {@link EmployeeResourceAssembler#toCollectionModel(Iterable)}. Then return them through
  * Spring Web's {@link ResponseEntity} fluent API.
  */
 @GetMapping("/employees")
-public ResponseEntity<Resources<Resource<Employee>>> findAll() {
+public ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 	return ResponseEntity.ok(
-		assembler.toResources(repository.findAll()));
+		assembler.toCollectionModel(repository.findAll()));
 
 }
 ----
 
-It uses the `EmployeeResourceAssembler` and it's `toResources(Iterable<Employee>)` method to turn a collection of
-`Employee` objects into a `Resources<Resource<Employee>>`.
+It uses the `EmployeeResourceAssembler` and it's `toCollectionModel(Iterable<Employee>)` method to turn a collection of
+`Employee` objects into a `CollectionModel<EntityModel<Employee>>`.
 
-NOTE: `Resources` is Spring HATEOAS's vendor neutral representation of a collection. It has it's
+NOTE: `CollectionModel` is Spring HATEOAS's vendor neutral representation of a collection. It has it's
 own set of links, separate from the links of each member of the collection. That's why the whole
-structure is `Resources<Resource<Employee>>` and not `Resources<Employee>`.
+structure is `CollectionModel<EntityModel<Employee>>` and not `CollectionModel<Employee>`.
 
 To build a single resource, the `/employees/{id}` route is shown below:
 
@@ -181,27 +181,27 @@ To build a single resource, the `/employees/{id}` route is shown below:
 ----
 /**
  * Look up a single {@link Employee} and transform it into a REST resource using
- * {@link EmployeeResourceAssembler#toResource(Object)}. Then return it through
+ * {@link EmployeeResourceAssembler#toEntityModel(Object)}. Then return it through
  * Spring Web's {@link ResponseEntity} fluent API.
  *
  * @param id
  */
 @GetMapping("/employees/{id}")
-public ResponseEntity<Resource<Employee>> findOne(@PathVariable long id) {
+public ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 	return ResponseEntity.ok(
-		assembler.toResource(repository.findOne(id)));
+		assembler.toEntityModel(repository.findOne(id)));
 }
 ----
 
-Again, the `EmployeeResourceAssembler` is used to convert a single `Employee` into a `Resource<Employee>`
-through its `toResource(Employee)` method.
+Again, the `EmployeeResourceAssembler` is used to convert a single `Employee` into a `EntityModel<Employee>`
+through its `toEntityModel(Employee)` method.
 
 == Customizing the Output
 
 What's not shown in this example is that the `EmployeeResourceAssembler` comes with overrides.
 
 * `setBasePath(/* base */)` would inject a prefix into every link built in the hypermedia.
-* `addLinks(Resource<T>)` and `addLinks(Resources<T>)` allows you to override/augment the default links assigned to every resource.
+* `addLinks(EntityModel<T>)` and `addLinks(CollectionModel<T>)` allows you to override/augment the default links assigned to every resource.
 * `getCollectionLinkBuilder()` lets you override the convention of how the whole route is built up.
 
 == Testing Hypermedia
