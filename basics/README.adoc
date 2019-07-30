@@ -82,13 +82,13 @@ operations.
 In REST, the "thing" being linked to is a *resource*. Resources provide both information as well as information on _how_ to
 retrieve and update that information.
 
-Spring HATEOAS defines a generic `Resource<T>` container that lets store any domain object (`Employee` in this example), and
+Spring HATEOAS defines a generic `EntityModel<T>` container uased to model resources that lets store any domain object (`Employee` in this example), and
 add additional links.
 
-IMPORTANT: Spring HATEOAS's `Resource` and `Link` classes are *vendor neutral*. HAL is thrown around a lot, being the
+IMPORTANT: Spring HATEOAS's `EntityModel` and `Link` classes are *vendor neutral*. HAL is thrown around a lot, being the
 default media type, but these classes can be used to render any media type.
 
-A common convention is to create a factory used to convert `Employee` objects into `Resource<Employee>` objects. Spring
+A common convention is to create a factory used to convert `Employee` objects into `EntityModel<Employee>` objects. Spring
 HATEOAS provides `SimpleIdentifiableResourceAssembler<T>` as the simplest mechanism to perform these conversions.
 
 [source,java]
