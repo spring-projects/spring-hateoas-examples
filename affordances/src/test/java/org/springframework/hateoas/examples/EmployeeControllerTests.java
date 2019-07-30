@@ -15,6 +15,16 @@
  */
 package org.springframework.hateoas.examples;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.Arrays;
+import java.util.Optional;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +35,6 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Arrays;
-import java.util.Optional;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Greg Turnquist
@@ -68,13 +66,9 @@ public class EmployeeControllerTests {
 				.andExpect(jsonPath("$._embedded.employees[0].role", is("ring bearer")))
 				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.method", is("put")))
 				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[0].name", is("firstName")))
-				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[0].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[1].name", is("id")))
-				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[1].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[2].name", is("lastName")))
-				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[2].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[3].name", is("role")))
-				.andExpect(jsonPath("$._embedded.employees[0]._templates.default.properties[3].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[0]._links.self.href", is("http://localhost/employees/1")))
 				.andExpect(jsonPath("$._embedded.employees[0]._links.employees.href", is("http://localhost/employees")))
 
@@ -84,25 +78,17 @@ public class EmployeeControllerTests {
 				.andExpect(jsonPath("$._embedded.employees[1].role", is("burglar")))
 				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.method", is("put")))
 				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[0].name", is("firstName")))
-				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[0].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[1].name", is("id")))
-				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[1].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[2].name", is("lastName")))
-				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[2].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[3].name", is("role")))
-				.andExpect(jsonPath("$._embedded.employees[1]._templates.default.properties[3].required", is(true)))
 				.andExpect(jsonPath("$._embedded.employees[1]._links.self.href", is("http://localhost/employees/2")))
 				.andExpect(jsonPath("$._embedded.employees[1]._links.employees.href", is("http://localhost/employees")))
 
 				.andExpect(jsonPath("$._templates.default.method", is("post")))
 				.andExpect(jsonPath("$._templates.default.properties[0].name", is("firstName")))
-				.andExpect(jsonPath("$._templates.default.properties[0].required", is(true)))
 				.andExpect(jsonPath("$._templates.default.properties[1].name", is("id")))
-				.andExpect(jsonPath("$._templates.default.properties[1].required", is(true)))
 				.andExpect(jsonPath("$._templates.default.properties[2].name", is("lastName")))
-				.andExpect(jsonPath("$._templates.default.properties[2].required", is(true)))
 				.andExpect(jsonPath("$._templates.default.properties[3].name", is("role")))
-				.andExpect(jsonPath("$._templates.default.properties[3].required", is(true)))
 
 				.andExpect(jsonPath("$._links.self.href", is("http://localhost/employees")));
 	}
@@ -124,13 +110,9 @@ public class EmployeeControllerTests {
 
 				.andExpect(jsonPath("$._templates.default.method", is("put")))
 				.andExpect(jsonPath("$._templates.default.properties[0].name", is("firstName")))
-				.andExpect(jsonPath("$._templates.default.properties[0].required", is(true)))
 				.andExpect(jsonPath("$._templates.default.properties[1].name", is("id")))
-				.andExpect(jsonPath("$._templates.default.properties[1].required", is(true)))
 				.andExpect(jsonPath("$._templates.default.properties[2].name", is("lastName")))
-				.andExpect(jsonPath("$._templates.default.properties[2].required", is(true)))
 				.andExpect(jsonPath("$._templates.default.properties[3].name", is("role")))
-				.andExpect(jsonPath("$._templates.default.properties[3].required", is(true)))
 
 				.andExpect(jsonPath("$._links.self.href", is("http://localhost/employees/1")))
 				.andExpect(jsonPath("$._links.employees.href", is("http://localhost/employees")));
