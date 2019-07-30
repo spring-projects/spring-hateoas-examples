@@ -112,7 +112,7 @@ With these changes in place, you can now define a `ResourceAssembler` for the `M
 [source,java]
 ----
 @Component
-class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manager> {
+class ManagerResourceAssembler extends SimpleIdentifiableRepresentationModelAssembler<Manager> {
 
 	ManagerResourceAssembler() {
 		super(ManagerController.class);
@@ -120,7 +120,7 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 }
 ----
 
-If you follow the same paradigm of extending Spring HATEOAS's `SimpleIdentifiableResourceAssembler` and applying the `Manager` type,
+If you follow the same paradigm of extending Spring HATEOAS's `SimpleIdentifiableRepresentationModelAssembler` and applying the `Manager` type,
 you can easily inherit links for */managers* and */managers/{id}*
 
 Before we go any further, we need to define those links!
@@ -227,12 +227,12 @@ to `ManagerResourceAssembler`:
 [source,java]
 ----
 @Component
-class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manager> {
+class ManagerResourceAssembler extends SimpleIdentifiableRepresentationModelAssembler<Manager> {
 
 	...
 
 	/**
-	 * Retain default links provided by {@link SimpleIdentifiableResourceAssembler}, but add extra ones to each {@link Manager}.
+	 * Retain default links provided by {@link SimpleIdentifiableRepresentationModelAssembler}, but add extra ones to each {@link Manager}.
 	 *
 	 * @param resource
 	 */
@@ -252,11 +252,11 @@ class ManagerResourceAssembler extends SimpleIdentifiableResourceAssembler<Manag
 
 ----
 
-`SimpleIdentifiableResourceAssembler` has methods to alter a resource representation for single items or collections. It has pre-baked
+`SimpleIdentifiableRepresentationModelAssembler` has methods to alter a resource representation for single items or collections. It has pre-baked
 renderings to create a self link to a single item as well as a link back to the collection. In this code, you are extending that
 method and invoking `super.addLinks()` in order to include those links. Then you add the link to the manager's employees you just created.
 
-IMPORTANT: You can either _add_ to the links defined by `SimpleIdentifiableResourceAssembler` as shown, or you can totally replace them by _not_
+IMPORTANT: You can either _add_ to the links defined by `SimpleIdentifiableRepresentationModelAssembler` as shown, or you can totally replace them by _not_
 invoking `super.addLinks()`. Your choice.
 
 There is a corresponding combination of a route/repository finder/assembler to allow an employee to find his or her manager. It's left as an exericise
@@ -344,7 +344,7 @@ familiar by now:
 [source,java]
 ----
 @Component
-class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<EmployeeWithManager> {
+class EmployeeWithManagerResourceAssembler extends SimpleRepresentationModelAssembler<EmployeeWithManager> {
 
 	/**
 	 * Define links to add to every individual {@link Resource}.
@@ -377,8 +377,8 @@ class EmployeeWithManagerResourceAssembler extends SimpleResourceAssembler<Emplo
 
 This has a handful of differences from the `ResourceAssembler` objects you've built up to this point:
 
-* Since the routes are different than traditional */employees* and */employees/{id}*, it makes no sense to use `SimpleIdentifiableResourceAssembler<T>`.
- So instead, you want to fall back to `SimpleResourceAssembler<EmployeeWithManager>`, in which NO links are defined out of the box.
+* Since the routes are different than traditional */employees* and */employees/{id}*, it makes no sense to use `SimpleIdentifiableRepresentationModelAssembler<T>`.
+ So instead, you want to fall back to `SimpleRepresentationModelAssembler<EmployeeWithManager>`, in which NO links are defined out of the box.
 * Because there are no defined routes, you are in full control.
 ** `addLinks(EntityModel<EmployeeWithManager> resource)` defines links for single items
 ** `addLinks(CollectionModel<EntityModel<EmployeeWithManager>> resources)` defines links for collections
@@ -430,21 +430,21 @@ In order to "start at the top" and hop, you must include a `RootController`:
 [source,java]
 ----
 @RestController
+@RestController
 class RootController {
 
 	@GetMapping("/")
-	ResponseEntity<ResourceSupport> root() {
+	ResponseEntity<RepresentationModel> root() {
 
-		ResourceSupport resourceSupport = new ResourceSupport();
+		RepresentationModel model = new RepresentationModel();
 
-		resourceSupport.add(linkTo(methodOn(RootController.class).root()).withSelfRel());
-		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
-		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
-		resourceSupport.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
+		model.add(linkTo(methodOn(RootController.class).root()).withSelfRel());
+		model.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+		model.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
+		model.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
 
-		return ResponseEntity.ok(resourceSupport);
+		return ResponseEntity.ok(model);
 	}
-
 }
 ----
 

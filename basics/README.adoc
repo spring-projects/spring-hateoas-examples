@@ -89,16 +89,16 @@ IMPORTANT: Spring HATEOAS's `EntityModel` and `Link` classes are *vendor neutral
 default media type, but these classes can be used to render any media type.
 
 A common convention is to create a factory used to convert `Employee` objects into `EntityModel<Employee>` objects. Spring
-HATEOAS provides `SimpleIdentifiableResourceAssembler<T>` as the simplest mechanism to perform these conversions.
+HATEOAS provides `SimpleIdentifiableRepresentationModelAssembler<T>` as the simplest mechanism to perform these conversions.
 
 [source,java]
 ----
 @Component
-class EmployeeResourceAssembler extends SimpleIdentifiableResourceAssembler<Employee> {
+class EmployeeResourceAssembler extends SimpleIdentifiableRepresentationModelAssembler<Employee> {
 
 	/**
 	 * Link the {@link Employee} domain type to the {@link EmployeeController} using this
-	 * {@link SimpleIdentifiableResourceAssembler} in order to generate both {@link org.springframework.hateoas.EntityModel}
+	 * {@link SimpleIdentifiableRepresentationModelAssembler} in order to generate both {@link org.springframework.hateoas.EntityModel}
 	 * and {@link org.springframework.hateoas.CollectionModel}.
 	 */
 	EmployeeResourceAssembler() {
@@ -146,7 +146,7 @@ class EmployeeController {
 This piece of code shows how the Spring MVC controller is wired with a copy of the `EmployeeRepository` as well as a
 `EmployeeResourceAssembler` and marked as a *REST controller* thanks to the `@RestController` annotation.
 
-To support `SimpleIdentifiableResourceAssembler`, the controller needs two things:
+To support `SimpleIdentifiableRepresentationModelAssembler`, the controller needs two things:
 
 * A route to the collection. By default, it assumes a pluralized, lowercased name (`Employee` -> `/employees`).
 * A route to a single entity. By default it assumes the collection's URI + `/{id}`.

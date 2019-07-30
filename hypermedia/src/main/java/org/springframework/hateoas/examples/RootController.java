@@ -31,15 +31,13 @@ class RootController {
 	@GetMapping("/")
 	ResponseEntity<RepresentationModel> root() {
 
-		RepresentationModel resourceSupport = new RepresentationModel();
+		RepresentationModel model = new RepresentationModel();
 
-		resourceSupport.add(linkTo(methodOn(RootController.class).root()).withSelfRel());
-		resourceSupport.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
-		resourceSupport
-				.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
-		resourceSupport.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
+		model.add(linkTo(methodOn(RootController.class).root()).withSelfRel());
+		model.add(linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+		model.add(linkTo(methodOn(EmployeeController.class).findAllDetailedEmployees()).withRel("detailedEmployees"));
+		model.add(linkTo(methodOn(ManagerController.class).findAll()).withRel("managers"));
 
-		return ResponseEntity.ok(resourceSupport);
+		return ResponseEntity.ok(model);
 	}
-
 }
