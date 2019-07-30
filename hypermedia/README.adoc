@@ -26,7 +26,7 @@ For starters, here is the basic definition:
 @Data
 @Entity
 @NoArgsConstructor
-class Manager implements Identifiable<Long> {
+class Manager {
 
 	@Id @GeneratedValue
 	private Long id;
@@ -79,7 +79,7 @@ To round things out, you need to make some updates to the `Employee` domain obje
 @Data
 @Entity
 @NoArgsConstructor
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;

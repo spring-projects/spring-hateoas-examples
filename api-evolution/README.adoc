@@ -26,7 +26,7 @@ We all must start somewhere. So imagine you created an employee representation l
 @Data
 @NoArgsConstructor
 @Entity
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;
@@ -174,7 +174,6 @@ There are many advantages:
 * Decouples the client from the server.
 * Clients may not want ALL the fields.
 * This client doesn't talk to a data store, so no JPA annotations.
-* This client isn't used to form links, to no need to implement the `Identifiable<T>` interface.
 * This client isn't used to fashion test data (yet), so no need for special constructors.
 
 All in all, it's enough to give it the empty constructor so Jackson can handle serializing/deserializing data over the wire.
@@ -347,7 +346,7 @@ Looking into link:new-server[new-server], the updated `Employee` domain object c
 @Data
 @NoArgsConstructor
 @Entity
-class Employee implements Identifiable<Long> {
+class Employee {
 
 	@Id @GeneratedValue
 	private Long id;
