@@ -64,6 +64,7 @@
 		<module>hypermedia</module>
 		<module>affordances</module>
 		<module>simplified</module>
+		<module>spring-hateoas-and-spring-data-rest</module>
 	</modules>
 
 	<properties>

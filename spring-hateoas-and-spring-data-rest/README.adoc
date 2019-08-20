@@ -1,0 +1,527 @@
+= Spring HATEOAS - Combined with Spring Data REST
+
+A common dilemna for people familiar with both Spring HATEAOS as well as Spring Data REST is deciding which to use.
+You can use both, in the same application.
+This section will show how.
+
+This example will borrow the concept found in Oliver Drotbohm's https://github.com/odrotbohm/spring-restbucks[Spring RESTbucks] example--a coffee shop fulfilling orders.
+
+== Defining the problem
+
+PROBLEM:
+You wish to implement the concept of orders.
+These orders have certain status codes which dictate what transitions the system can take, e.g. an order can't be fulfilled until it's paid for, and a fulfilled order can't be cancelled.
+
+SOLUTION:
+You must encode a set of `OrderStatus` codes, and enforce them using a custom Spring Web MVC controller.
+This controller should have routes that appear alongside the ones provided by Spring Data REST.
+
+== Getting off the ground
+
+To build this example, you need:
+
+* Spring Data REST
+* Spring HATEAOS
+* Spring Data JPA
+* H2
+
+IMPORTANT: It's especially easy if you use http://start.spring.io and pick *Rest Repositories*, *Spring HATEOAS*, *Spring Data JPA*, and *H2 Database*.
+
+Assuming you have an empty project with these dependencies, you can get underway.
+
+Before you can code a custom controller, you need the basics of an ordering system.
+And that starts with a domain object:
+
+====
+[source,java,tabsize=2]
+----
+@Entity
+@Table(name = "ORDERS") // <1>
+class Order {
+
+    @Id @GeneratedValue
+    private Long id; // <2>
+
+    private OrderStatus orderStatus; // <3>
+
+    private String description; // <4>
+
+    private Order() {
+        this.id = null;
+        this.orderStatus = OrderStatus.BEING_CREATED;
+        this.description = "";
+    }
+
+    public Order(String description) {
+        this();
+        this.description = description;
+    }
+
+    ...
+}
+----
+<1> In SQL, `ORDER` is a reserved word.
+Spring Data defaults to calling the table `order` which requires the override using JPA's `@Table` annotation.
+<2> The `id` field is your primary key set to automatic generation.
+<3> Every `Order` has an `OrderStatus`, a value type that embodies the current state.
+<4> `description` represents the rest of the POJOs data.
+
+Also shown are two constructors: an private no-arg one to support JPA and one used by you to create new entries.
+====
+
+The next step in defining your domain is to define `OrderStatus`.
+Assuming we want a general flow of `Create an order` => `Pay for an order` => `Fulfill an order`, with the option to cancel only if you have not yet paid for it, this will do nicely:
+
+====
+[source,java,tabsize=2]
+----
+public enum OrderStatus {
+
+	BEING_CREATED, PAID_FOR, FULFILLED, CANCELLED;
+
+	/**
+	 * Verify the transition between {@link OrderStatus} is valid.
+	 *
+	 * NOTE: This is where any/all rules for state transitions should be kept and enforced.
+	 */
+	static boolean valid(OrderStatus currentStatus, OrderStatus newStatus) {
+
+		if (currentStatus == BEING_CREATED) {
+			return newStatus == PAID_FOR || newStatus == CANCELLED;
+		} else if (currentStatus == PAID_FOR) {
+			return newStatus == FULFILLED;
+		} else if (currentStatus == FULFILLED) {
+			return false;
+		} else if (currentStatus == CANCELLED) {
+			return false;
+		} else {
+			throw new RuntimeException("Unrecognized situation.");
+		}
+	}
+}
+----
+
+At the top are the actual states.
+At the bottom is a static validation method.
+This is where the rules of state transitions are defined, and where the rest of the system should look to discern whether or not a transition is valid.
+====
+
+The last step to get off the ground is a Spring Data repository definition:
+
+====
+[source,java,tabsize=2]
+----
+public interface OrderRepository extends CrudRepository<Order, Long> {
+
+}
+----
+
+This repository extends Spring Data Commons' `CrudRepository`, filling in the domain and key types (`Order` and `Long`).
+For this example, there is no need for custom finder methods.
+====
+
+For good measure, why don't you preload some data?
+
+====
+[source,java,tabsize=2]
+----
+@Component
+public class DatabaseLoader {
+
+	@Bean
+	CommandLineRunner init(OrderRepository repository) { // <1>
+
+		return args -> { // <2>
+			repository.save(new Order("grande mocha")); // <3>
+			repository.save(new Order("venti hazelnut machiatto"));
+		};
+	}
+}
+----
+<1> Returning a `CommandLineRunner` as a Spring bean will result in an object that Spring Boot invokes when the app finished starting up.
+<2> Since `CommandLineRunner` is a Java 8 functional interface, you may simply return a lambda expression instead of creating an instance.
+<3> Inside the lambda, you can leverage the injected `OrderRepository` to create a couple initial orders.
+====
+
+Since you're building an API, why not serve it at the root path of `/api`?
+To do so, you need to create an `application.yml`:
+
+.`src/main/resources/application.yml`
+====
+[source,yaml,tabsize=2]
+----
+spring:
+  data:
+    rest:
+      base-path: /api
+----
+====
+
+It should be stated that right here, you can launch your application.
+Spring Boot will launch the web container, preload the data, and then bring Spring Data REST online.
+Spring Data REST with all of its prebuilt, hypermedia-powered routes, will respond to calls to create, replace, update and delete `Order` objects.
+
+But Spring Data REST will know nothing of valid and invalid state transitions.
+It's pre-built links will help you navigate from `/api` to the aggregate root for all orders, to individual entries, and back.
+But there will no concept of paying for, fulfilling, or cancelling orders.
+At least, not embedded in the hypermedia.
+The only hint end users may have are the payloads of the existing orders.
+
+And that's not effective.
+
+No, it's better to create some extra operations and then serve up their links _when appropriate_.
+
+== Creating custom operations
+
+For starters, you can create a custom controller that is registered under the same `/api` like this:
+
+====
+[source,java,tabsize=2]
+----
+@BasePathAwareController // <1>
+public class CustomOrderController {
+
+	private final OrderRepository repository;
+
+	public CustomOrderController(OrderRepository repository) { // <2>
+		this.repository = repository;
+	}
+
+	...
+}
+----
+<1> Spring Data REST's `@BasePathAwareController` is used to denote a `@RestController` that only wishes to have the same base path (`/api` in this example).
+<2> The controller receives a copy of the `OrderRepository` via *constructor injection*.
+====
+
+To add a method that supports making payments could look like this:
+
+====
+[source,java,tabsize=2,indent=0]
+----
+	@PostMapping("/orders/{id}/pay") // <1>
+	ResponseEntity<?> pay(@PathVariable Long id) { // <2>
+
+		Order order = this.repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id)); // <3>
+
+		if (valid(order.getOrderStatus(), OrderStatus.PAID_FOR)) { // <4>
+
+			order.setOrderStatus(OrderStatus.PAID_FOR);
+			return ResponseEntity.ok(repository.save(order)); // <5>
+		}
+
+		return ResponseEntity.badRequest()
+				.body("Transitioning from " + order.getOrderStatus() + " to " + OrderStatus.PAID_FOR + " is not valid."); // <6>
+	}
+----
+<1> Invoking `POST /orders/{id}/pay` is a signal for end users to signal "I want to pay for this".
+<2> Spring MVC decodes the `{id}` piece of the URI into an `id` argument.
+<3> Use `OrderRepository` to retrieve the current `Order` or throw an exception.
+<4> Check if the transition from the order's current status to `PAID_FOR` is valid.
+<5> If it is valid, update the order's status and save it back to the database.
+<6> If it is _not_ valid, return an HTTP Bad Request status code with details about the requested transition in the response body.
+
+NOTE: It's important to note this only shows transitioning to a different state, i.e. `OrderStatus`.
+It doesn't carry the concept of collecting payment and thus doesn't denote currency.
+====
+
+I suggest reading that method a couple more times.
+If you grok it, then the following operations should make perfect sense:
+
+====
+[source,java,tabsize=2,indent=0]
+----
+	@PostMapping("/orders/{id}/cancel")
+	ResponseEntity<?> cancel(@PathVariable Long id) {
+
+		Order order = this.repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+
+		if (valid(order.getOrderStatus(), OrderStatus.CANCELLED)) {
+
+			order.setOrderStatus(OrderStatus.CANCELLED);
+			return ResponseEntity.ok(repository.save(order));
+		}
+
+		return ResponseEntity.badRequest()
+				.body("Transitioning from " + order.getOrderStatus() + " to " + OrderStatus.CANCELLED + " is not valid.");
+	}
+
+	@PostMapping("/orders/{id}/fulfill")
+	ResponseEntity<?> fulfill(@PathVariable Long id) {
+
+		Order order = this.repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+
+		if (valid(order.getOrderStatus(), OrderStatus.FULFILLED)) {
+
+			order.setOrderStatus(OrderStatus.FULFILLED);
+			return ResponseEntity.ok(repository.save(order));
+		}
+
+		return ResponseEntity.badRequest()
+				.body("Transitioning from " + order.getOrderStatus() + " to " + OrderStatus.FULFILLED + " is not valid.");
+	}
+----
+====
+
+This is how you code the transitions and ensuring they are only carried out if valid.
+But it doesn't alter the hypermedia served by Spring Data REST.
+Hence, end users _still_ don't know about the extra operations nor if they are appropriate or not.
+
+== Altering what Spring Data REST is serving
+
+That requires creating something that can alter the object before it gets serialized.
+Spring HATEOAS provides a
+`RepresentationModelProcessor<T>` as the means to define a post processor.
+In this case, you'd be interested in post processing
+`EntityModel<Order>` objects (instead of just `Order` objects).
+
+Like this:
+
+====
+[source,java,tabsize=2]
+----
+@Component
+public class OrderProcessor implements RepresentationModelProcessor<EntityModel<Order>> { // <1>
+
+	private final RepositoryRestConfiguration configuration;
+
+	public OrderProcessor(RepositoryRestConfiguration configuration) { // <2>
+		this.configuration = configuration;
+	}
+
+	...
+}
+----
+<1> Implementing `RepresentationModelProcessor` for `EntityModel<Order>` will gives us a handle on the hypermedia endowed object Spring Data REST assembles.
+<2> We need a copy of Spring Data REST's `RepositoryRestConfiguration` bean in order to know the *base path*.
+The way we use it will be shown below.
+====
+
+This interface only has one method to implement, `T process(T model)`, where you can augment (or completely replace) the "thing" before it gets serialized.
+
+Check it out:
+
+====
+[source,java,tabsize=2,indent=0]
+----
+	@Override
+	public EntityModel<Order> process(EntityModel<Order> model) {
+
+		CustomOrderController controller = methodOn(CustomOrderController.class); // <1>
+		String basePath = configuration.getBasePath().toString(); // <2>
+
+		// If PAID_FOR is valid, add a link to the `pay()` method
+		if (valid(model.getContent().getOrderStatus(), OrderStatus.PAID_FOR)) {
+			model.add(applyBasePath( //
+					linkTo(controller.pay(model.getContent().getId())) //
+							.withRel(IanaLinkRelations.PAYMENT), //
+					basePath));
+		}
+
+		// If CANCELLED is valid, add a link to the `cancel()` method
+		if (valid(model.getContent().getOrderStatus(), OrderStatus.CANCELLED)) {
+			model.add(applyBasePath( //
+					linkTo(controller.cancel(model.getContent().getId())) //
+							.withRel(LinkRelation.of("cancel")), //
+					basePath));
+		}
+
+		// If FULFILLED is valid, add a link to the `fulfill()` method
+		if (valid(model.getContent().getOrderStatus(), OrderStatus.FULFILLED)) {
+			model.add(applyBasePath( //
+					linkTo(controller.fulfill(model.getContent().getId())) //
+							.withRel(LinkRelation.of("fulfill")), //
+					basePath));
+		}
+
+		return model;
+	}
+----
+<1> Get a hold of the `CustomOrderController` class with your custom `pay`, `cancel`, and `fulfill` methods.
+<2> Look up the `basePath` Spring Data REST has been configured with.
+
+Check the `model` object's payload (an `Order` object) for the current `OrderStatus`.
+Check if `PAID_FOR` is valid.
+If so, add a link to that method.
+Repeat for the other two state transitions.
+====
+
+If you'll notice, there is another function, `applyBasePath`, used for each of these links.
+A gap between Spring HATEOAS and Spring Data REST is that Spring HATEAOS knows nothing about Spring Data REST's `basePath` setting.
+Hence, when you build a link to `CustomerOrderController`, it won't know about
+`@BasePathAwareController`.
+So you have to put in yourself (for now).
+
+IMPORTANT: It's to implement this.
+Otherwise, end users will only see links to `/orders/{id}/pay`, but the controller will expect `/api/orders/{id}/pay`
+
+====
+[source,java,tabsize=2,indent=0]
+----
+	/**
+	 * Adjust the {@link Link} such that it starts at {@literal basePath}.
+	 *
+	 * @param link - link presumably supplied via Spring HATEOAS
+	 * @param basePath - base path provided by Spring Data REST
+	 * @return new {@link Link} with these two values melded together
+	 */
+	private static Link applyBasePath(Link link, String basePath) {
+
+		URI uri = link.toUri();
+
+		URI newUri = null;
+		try {
+			newUri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), //
+					uri.getPort(), basePath + uri.getPath(), uri.getQuery(), uri.getFragment());
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+
+		return new Link(newUri.toString(), link.getRel());
+	}
+----
+
+This functional essentially extracts the URI of the incoming `link`, inserts the `basePath` at the front of it's path, and then fashions a new Spring HATEAOS `link.
+====
+
+== Interacting with your API
+
+With this, you can easily run things, and see your conditional links appear:
+
+====
+----
+$ curl localhost:8080/api/orders/1
+{
+  "orderStatus" : "BEING_CREATED",
+  "description" : "grande mocha",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/api/orders/1"
+    },
+    "order" : {
+      "href" : "http://localhost:8080/api/orders/1"
+    },
+    "payment" : {
+      "href" : "http://localhost:8080/api/orders/1/pay"
+    },
+    "cancel" : {
+      "href" : "http://localhost:8080/api/orders/1/cancel"
+    }
+  }
+}
+----
+====
+
+Apply the payment link:
+
+====
+----
+$ curl -X POST localhost:8080/api/orders/1/pay
+{
+  "id" : 1,
+  "orderStatus" : "PAID_FOR",
+  "description" : "grande mocha"
+}
+
+$ curl localhost:8080/api/orders/1
+{
+  "orderStatus" : "PAID_FOR",
+  "description" : "grande mocha",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/api/orders/1"
+    },
+    "order" : {
+      "href" : "http://localhost:8080/api/orders/1"
+    },
+    "fulfill" : {
+      "href" : "http://localhost:8080/api/orders/1/fulfill"
+    }
+  }
+}
+----
+====
+
+The `pay` and `cancel` links have disappeared, replaced with a `fulfill` link.
+Fulfill the order and see the final state:
+
+====
+----
+$ curl -X POST localhost:8080/api/orders/1/fulfill
+{
+  "id" : 1,
+  "orderStatus" : "FULFILLED",
+  "description" : "grande mocha"
+}
+
+$ curl localhost:8080/api/orders/1
+{
+  "orderStatus" : "FULFILLED",
+  "description" : "grande mocha",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/api/orders/1"
+    },
+    "order" : {
+      "href" : "http://localhost:8080/api/orders/1"
+    }
+  }
+}
+----
+====
+
+The first drink order has been fulfilled.
+If you cancel the second order, you can see what _it's_ links tell you:
+
+====
+----
+$ curl localhost:8080/api/orders/2
+{
+  "orderStatus" : "BEING_CREATED",
+  "description" : "venti hazelnut machiatto",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/api/orders/2"
+    },
+    "order" : {
+      "href" : "http://localhost:8080/api/orders/2"
+    },
+    "payment" : {
+      "href" : "http://localhost:8080/api/orders/2/pay"
+    },
+    "cancel" : {
+      "href" : "http://localhost:8080/api/orders/2/cancel"
+    }
+  }
+}
+
+$ curl -X POST localhost:8080/api/orders/2/cancel
+{
+  "id" : 2,
+  "orderStatus" : "CANCELLED",
+  "description" : "venti hazelnut machiatto"
+}
+
+$ curl localhost:8080/api/orders/2
+{
+  "orderStatus" : "CANCELLED",
+  "description" : "venti hazelnut machiatto",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/api/orders/2"
+    },
+    "order" : {
+      "href" : "http://localhost:8080/api/orders/2"
+    }
+  }
+}
+----
+====
+
+It has reached a different end state, and the links guided you the whole way.
+
+== Conclusion
+
+This is what it takes to create custom, conditional, hypermedia-based routes, and tied them into the unconditional ones provided by Spring Data REST.
+Seamlessly.
+By letting Spring Data REST do the heavy lifting, you are freed up to work on such business-oriented logic when building a resilient API.
