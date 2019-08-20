@@ -57,7 +57,7 @@ public class EmployeeControllerTests {
 		mvc.perform(get("/employees").accept(MediaTypes.HAL_JSON_VALUE)) //
 				.andDo(print()) //
 				.andExpect(status().isOk()) //
-				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
 				.andExpect(jsonPath("$._embedded.employees[0].id", is(1)))
 				.andExpect(jsonPath("$._embedded.employees[0].firstName", is("Frodo")))
 				.andExpect(jsonPath("$._embedded.employees[0].lastName", is("Baggins")))
