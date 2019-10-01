@@ -11,7 +11,7 @@
 	<name>Spring HATEOAS - Examples</name>
 	<description>Examples using Spring HATEOAS to build RESTful services</description>
 
-	<inceptionYear>2017-2019</inceptionYear>
+	<inceptionYear>2017</inceptionYear>
 
 	<contributors>
 		<contributor>
@@ -32,7 +32,7 @@
 			<name>Apache License, Version 2.0</name>
 			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
 			<comments>
-				Copyright 2017 the original author or authors.
+				Copyright 2017-2019 the original author or authors.
 
 				Licensed under the Apache License, Version 2.0 (the "License");
 				you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.2.0.M5</version>
+		<version>2.2.0.BUILD-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -73,8 +73,8 @@
 		<java.version>1.8</java.version>
 
 		<evo.version>1.2.2</evo.version>
-		<!--<spring-hateoas.version>1.0.0.BUILD-SNAPSHOT</spring-hateoas.version>-->
-		<!--<spring-plugin.version>2.0.0.BUILD-SNAPSHOT</spring-plugin.version>-->
+<!--		<spring-hateoas.version>1.0.0.RELEASE</spring-hateoas.version>-->
+<!--		<spring-data-releasetrain.version>Moore-RELEASE</spring-data-releasetrain.version>-->
 	</properties>
 
 	<profiles>
