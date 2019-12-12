@@ -80,7 +80,7 @@
 		<profile>
 			<id>spring52-next</id>
 			<properties>
-				<spring.version>5.2.0.BUILD-SNAPSHOT</spring.version>
+				<spring.version>5.2.3.BUILD-SNAPSHOT</spring.version>
 			</properties>
 			<repositories>
 				<repository>
