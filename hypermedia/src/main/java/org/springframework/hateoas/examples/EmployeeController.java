@@ -17,14 +17,12 @@ package org.springframework.hateoas.examples;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.IanaLinkRelations;
-import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -88,16 +86,8 @@ class EmployeeController {
 		CollectionModel<EntityModel<Employee>> collectionModel = assembler
 				.toCollectionModel(repository.findByManagerId(id));
 
-		List<Link> newLinks = collectionModel.getLinks().stream() //
-				.map(link -> {
-					// Replace the "self" link so it links back to here
-					if (link.getRel() == IanaLinkRelations.SELF) {
-						return linkTo(methodOn(EmployeeController.class).findEmployees(id)).withSelfRel();
-					} else {
-						return link;
-					}
-				}) //
-				.collect(Collectors.toList());
+		Links newLinks = collectionModel.getLinks().merge(Links.MergeMode.REPLACE_BY_REL,
+				linkTo(methodOn(EmployeeController.class).findEmployees(id)).withSelfRel());
 
 		return ResponseEntity.ok(new CollectionModel<>(collectionModel.getContent(), newLinks));
 	}
