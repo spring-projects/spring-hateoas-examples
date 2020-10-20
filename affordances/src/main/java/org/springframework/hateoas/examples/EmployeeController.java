@@ -52,14 +52,14 @@ class EmployeeController {
 	ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 
 		List<EntityModel<Employee>> employeeResources = StreamSupport.stream(repository.findAll().spliterator(), false)
-				.map(employee -> new EntityModel<>(employee,
+				.map(employee -> EntityModel.of(employee,
 						linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
 								.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
 								.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
 						linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 				.collect(Collectors.toList());
 
-		return ResponseEntity.ok(new CollectionModel<>( //
+		return ResponseEntity.ok(CollectionModel.of( //
 				employeeResources, //
 				linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()
 						.andAffordance(afford(methodOn(EmployeeController.class).newEmployee(null)))));
@@ -70,7 +70,7 @@ class EmployeeController {
 
 		Employee savedEmployee = repository.save(employee);
 
-		return new EntityModel<>(savedEmployee,
+		return EntityModel.of(savedEmployee,
 				linkTo(methodOn(EmployeeController.class).findOne(savedEmployee.getId())).withSelfRel()
 						.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, savedEmployee.getId())))
 						.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(savedEmployee.getId()))),
@@ -91,7 +91,7 @@ class EmployeeController {
 	ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 		return repository.findById(id)
-				.map(employee -> new EntityModel<>(employee,
+				.map(employee -> EntityModel.of(employee,
 						linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel()
 								.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, employee.getId())))
 								.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(employee.getId()))),
@@ -108,7 +108,7 @@ class EmployeeController {
 
 		Employee updatedEmployee = repository.save(employeeToUpdate);
 
-		return new EntityModel<>(updatedEmployee,
+		return EntityModel.of(updatedEmployee,
 				linkTo(methodOn(EmployeeController.class).findOne(updatedEmployee.getId())).withSelfRel()
 						.andAffordance(afford(methodOn(EmployeeController.class).updateEmployee(null, updatedEmployee.getId())))
 						.andAffordance(afford(methodOn(EmployeeController.class).deleteEmployee(updatedEmployee.getId()))),

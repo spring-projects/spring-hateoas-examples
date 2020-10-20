@@ -18,6 +18,7 @@ package org.springframework.hateoas.examples;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -41,10 +42,10 @@ public class HomeController {
 
 	private static final String REMOTE_SERVICE_ROOT_URI = "http://localhost:9000";
 
-	private final RestTemplate rest;
+	private RestTemplate rest;
 
-	public HomeController(RestTemplate restTemplate) {
-		this.rest = restTemplate;
+	public HomeController(RestTemplateBuilder restTemplateBuilder) {
+		this.rest = restTemplateBuilder.build();
 	}
 
 	/**

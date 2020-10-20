@@ -189,8 +189,8 @@ public class HomeController {
 
 	private final RestTemplate rest;
 
-	public HomeController(RestTemplate restTemplate) {
-		this.rest = restTemplate;
+	public HomeController(RestTemplateBuilder restTemplateBuilder) {
+		this.rest = restTemplateBuilder.build();
 	}
 	...
 }
@@ -202,7 +202,8 @@ service. So in this example, it is hard coded into place.
 WARNING: For fault tolerant production systems, hard coded URIs are NOT recommended. Instead, use something like
 Spring Cloud Netflix and it's Eureka/Ribbon features to allow https://spring.io/guides/gs/service-registration-and-discovery/[service discovery] and https://spring.io/guides/gs/client-side-load-balancing/[load balanced calls].
 
-Parts of the controller must also perform REST calls, so we request a `RestTemplate` in the constructor call, allowing Spring to provide it.
+Parts of the controller must also perform REST calls, so we request a `RestTemplateBuilder` in the constructor call, allowing Spring Boot to provide it.
+Having been decorated with the `HypermediaRestTemplateConfigurer`, it has all active media types applied. You are free to further customize things before invoking the `build()` operation that yields a `RestTemplate`.
 
 To construct a listing of all employees, check out the following controller method:
 

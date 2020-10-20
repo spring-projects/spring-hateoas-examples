@@ -15,9 +15,10 @@
  */
 package org.springframework.hateoas.examples;
 
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.hateoas.config.HypermediaRestTemplateConfigurer;
 
 /**
  * @author Greg Turnquist
@@ -26,7 +27,9 @@ import org.springframework.web.client.RestTemplate;
 public class ClientConfig {
 
 	@Bean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
+	RestTemplateCustomizer hypermediaRestTemplateCustomizer(HypermediaRestTemplateConfigurer configurer) {
+		return restTemplate -> {
+			configurer.registerHypermediaTypes(restTemplate);
+		};
 	}
 }

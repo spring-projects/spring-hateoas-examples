@@ -18,6 +18,7 @@ package org.springframework.hateoas.examples;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -43,8 +44,8 @@ public class HomeController {
 
 	private final RestTemplate rest;
 
-	public HomeController(RestTemplate restTemplate) {
-		this.rest = restTemplate;
+	public HomeController(RestTemplateBuilder restTemplateBuilder) {
+		this.rest = restTemplateBuilder.build();
 	}
 
 	/**

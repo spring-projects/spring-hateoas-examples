@@ -89,7 +89,7 @@ class EmployeeController {
 		Links newLinks = collectionModel.getLinks().merge(Links.MergeMode.REPLACE_BY_REL,
 				linkTo(methodOn(EmployeeController.class).findEmployees(id)).withSelfRel());
 
-		return ResponseEntity.ok(new CollectionModel<>(collectionModel.getContent(), newLinks));
+		return ResponseEntity.ok(CollectionModel.of(collectionModel.getContent(), newLinks));
 	}
 
 	@GetMapping("/employees/detailed")

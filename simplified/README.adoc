@@ -96,13 +96,13 @@ The route for the https://martinfowler.com/bliki/DDD_Aggregate.html[aggregate ro
 ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 
 	List<EntityModel<Employee>> employees = StreamSupport.stream(repository.findAll().spliterator(), false)
-		.map(employee -> new EntityModel<>(employee,
+		.map(employee -> EntityModel.of(employee,
 			linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel(),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 		.collect(Collectors.toList());
 
 	return ResponseEntity.ok(
-		new CollectionModel<>(employees,
+		CollectionModel.of(employees,
 			linkTo(methodOn(EmployeeController.class).findAll()).withSelfRel()));
 }
 ----
@@ -133,7 +133,7 @@ To build a single resource, the `/employees/{id}` route is shown below:
 ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
 
 	return repository.findById(id)
-		.map(employee -> new EntityModel<>(employee,
+		.map(employee -> EntityModel.of(employee,
 			linkTo(methodOn(EmployeeController.class).findOne(employee.getId())).withSelfRel(),
 			linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees")))
 		.map(ResponseEntity::ok)

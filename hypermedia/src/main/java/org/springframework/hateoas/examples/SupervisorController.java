@@ -41,7 +41,7 @@ public class SupervisorController {
 
 		EntityModel<Manager> managerResource = controller.findOne(id).getBody();
 
-		EntityModel<Supervisor> supervisorResource = new EntityModel<>( //
+		EntityModel<Supervisor> supervisorResource = EntityModel.of( //
 				new Supervisor(managerResource.getContent()), //
 				managerResource.getLinks());
 
