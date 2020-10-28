@@ -36,7 +36,7 @@ This domain object includes:
 
 * `@Data` - Lombok annotation to define a mutable value object
 * `@Entity` - JPA annotation to make the object storagable in a classic SQL engine (H2 in this example)
-* `@NoArgsConstructor(PRIVATE)` - Lombok annotation to create an empty constructor call to appease Jackson, but which is private and not usable to our app's code.
+* `@NoArgsConstructor(PROTECTED)` - Lombok annotation to create an empty constructor call to appease JPA, but which is protected and not usable to our app's code.
 * `@AllArgsConstructor` - Lombok annotation to create an all-arg constructor for certain test scenarios
 * `@JsonIgnoreProperties(ignoreUnknown=true)` - Jackson annotation to ignore unknown attributes when deserializing JSON.
 
@@ -94,14 +94,14 @@ HATEOAS provides `SimpleIdentifiableRepresentationModelAssembler<T>` as the simp
 [source,java]
 ----
 @Component
-class EmployeeResourceAssembler extends SimpleIdentifiableRepresentationModelAssembler<Employee> {
+class EmployeeRepresentationModelAssembler extends SimpleIdentifiableRepresentationModelAssembler<Employee> {
 
 	/**
 	 * Link the {@link Employee} domain type to the {@link EmployeeController} using this
 	 * {@link SimpleIdentifiableRepresentationModelAssembler} in order to generate both {@link org.springframework.hateoas.EntityModel}
 	 * and {@link org.springframework.hateoas.CollectionModel}.
 	 */
-	EmployeeResourceAssembler() {
+	EmployeeRepresentationModelAssembler() {
 		super(EmployeeController.class);
 	}
 }
@@ -130,9 +130,9 @@ NOTE: This guide assumes you already somewhat familiar with Spring MVC.
 class EmployeeController {
 
 	private final EmployeeRepository repository;
-	private final EmployeeResourceAssembler assembler;
+	private final EmployeeRepresentationModelAssembler assembler;
 
-	EmployeeController(EmployeeRepository repository, EmployeeResourceAssembler assembler) {
+	EmployeeController(EmployeeRepository repository, EmployeeRepresentationModelAssembler assembler) {
 
 		this.repository = repository;
 		this.assembler = assembler;
@@ -144,7 +144,7 @@ class EmployeeController {
 ----
 
 This piece of code shows how the Spring MVC controller is wired with a copy of the `EmployeeRepository` as well as a
-`EmployeeResourceAssembler` and marked as a *REST controller* thanks to the `@RestController` annotation.
+`EmployeeRepresentationModelAssembler` and marked as a *REST controller* thanks to the `@RestController` annotation.
 
 To support `SimpleIdentifiableRepresentationModelAssembler`, the controller needs two things:
 
@@ -157,7 +157,7 @@ The collection's route is shown below:
 ----
 /**
  * Look up all employees, and transform them into a REST collection resource using
- * {@link EmployeeResourceAssembler#toCollectionModel(Iterable)}. Then return them through
+ * {@link EmployeeRepresentationModelAssembler#toCollectionModel(Iterable)}. Then return them through
  * Spring Web's {@link ResponseEntity} fluent API.
  */
 @GetMapping("/employees")
@@ -168,7 +168,7 @@ public ResponseEntity<CollectionModel<EntityModel<Employee>>> findAll() {
 }
 ----
 
-It uses the `EmployeeResourceAssembler` and it's `toCollectionModel(Iterable<Employee>)` method to turn a collection of
+It uses the `EmployeeRepresentationModelAssembler` and it's `toCollectionModel(Iterable<Employee>)` method to turn a collection of
 `Employee` objects into a `CollectionModel<EntityModel<Employee>>`.
 
 NOTE: `CollectionModel` is Spring HATEOAS's vendor neutral representation of a collection. It has it's
@@ -181,24 +181,26 @@ To build a single resource, the `/employees/{id}` route is shown below:
 ----
 /**
  * Look up a single {@link Employee} and transform it into a REST resource using
- * {@link EmployeeResourceAssembler#toEntityModel(Object)}. Then return it through
+ * {@link EmployeeRepresentationModelAssembler#toEntityModel(Object)}. Then return it through
  * Spring Web's {@link ResponseEntity} fluent API.
  *
  * @param id
  */
 @GetMapping("/employees/{id}")
 public ResponseEntity<EntityModel<Employee>> findOne(@PathVariable long id) {
-	return ResponseEntity.ok(
-		assembler.toEntityModel(repository.findOne(id)));
+	return this.repository.findById(id) //
+            .map(this.assembler::toModel) //
+            .map(ResponseEntity::ok) //
+            .orElse(ResponseEntity.notFound().build());
 }
 ----
 
-Again, the `EmployeeResourceAssembler` is used to convert a single `Employee` into a `EntityModel<Employee>`
+Again, the `EmployeeRepresentationModelAssembler` is used to convert a single `Employee` into a `EntityModel<Employee>`
 through its `toEntityModel(Employee)` method.
 
 == Customizing the Output
 
-What's not shown in this example is that the `EmployeeResourceAssembler` comes with overrides.
+What's not shown in this example is that the `EmployeeRepresentationModelAssembler` comes with overrides.
 
 * `setBasePath(/* base */)` would inject a prefix into every link built in the hypermedia.
 * `addLinks(EntityModel<T>)` and `addLinks(CollectionModel<T>)` allows you to override/augment the default links assigned to every resource.
@@ -215,7 +217,7 @@ The following is a bare bones "slice" test case:
 ----
 @RunWith(SpringRunner.class)
 @WebMvcTest(EmployeeController.class)
-@Import({EmployeeResourceAssembler.class})
+@Import({EmployeeRepresentationModelAssembler.class})
 public class EmployeeControllerTests {
 
 	@Autowired
@@ -231,7 +233,7 @@ public class EmployeeControllerTests {
 * `@RunWith(SpringRunner.class)` is needed to leverage Spring Boot's test annotations with JUnit.
 * `@WebMvcTest(EmployeeController.class)` confines Spring Boot to only autoconfiguring Spring MVC components, and _only_
 this one controller, making it a very precise test case.
-* `@Import({EmployeeResourceAssembler.class})` pulls in one extra Spring component that would be ignored by `@WebMvcTest`.
+* `@Import({EmployeeRepresentationModelAssembler.class})` pulls in one extra Spring component that would be ignored by `@WebMvcTest`.
 * `@Autowired MockMvc` gives us a handle on a Spring Mock tester.
 * `@MockBean` flags `EmployeeRepositor` as a test collaborator.
 
@@ -250,7 +252,7 @@ public void getShouldFetchAHalDocument() throws Exception {
 	mvc.perform(get("/employees").accept(MediaTypes.HAL_JSON_VALUE))
 		.andDo(print())
 		.andExpect(status().isOk())
-		.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8"))
+		.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
 		.andExpect(jsonPath("$._embedded.employees[0].id", is(1)))
 	...
 }
@@ -264,7 +266,7 @@ public void getShouldFetchAHalDocument() throws Exception {
 ** Verify the response *Content-Type* header is also HAL's media type.
 ** Verify that the JSON Path of *$._embedded.employees[0].id* is `1`.
 
-The rest of the assertions are commented out, but you can read it in the source code.
+The rest of the assertions are not shown above, but you can read it in the source code.
 
 NOTE: This is not the only way to assert the results. See Spring Framework reference docs and Spring HATEOAS
 test cases for more examples.

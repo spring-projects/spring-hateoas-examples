@@ -42,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @Data
 @Entity
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Employee {
