@@ -12,7 +12,7 @@ The cornerstone of any example is the domain object:
 ----
 @Data
 @Entity
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 class Employee {
 
@@ -30,7 +30,7 @@ This domain object includes:
 
 * `@Data` - Lombok annotation to define a mutable value object
 * `@Entity` - JPA annotation to make the object storagable in a classic SQL engine (H2 in this example)
-* `@NoArgsConstructor(PRIVATE)` - Lombok annotation to create an empty constructor call to appease Jackson, but which is private and not usable to our app's code.
+* `@NoArgsConstructor(PROTECTED)` - Lombok annotation to create an empty constructor call to appease JPA, but which is protected and not usable to our app's code.
 * `@AllArgsConstructor` - Lombok annotation to create an all-arg constructor for certain test scenarios
 
 == Accessing Data

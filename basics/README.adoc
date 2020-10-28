@@ -14,7 +14,7 @@ The cornerstone of any example is the domain object:
 ----
 @Data
 @Entity
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Employee {
