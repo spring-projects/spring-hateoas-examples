@@ -20,10 +20,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.Optional;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -42,7 +39,7 @@ class Employee {
 	/**
 	 * To break the recursive, bi-directional relationship, don't serialize {@literal manager}.
 	 */
-	@JsonIgnore @OneToOne private Manager manager;
+	@JsonIgnore @ManyToOne private Manager manager;
 
 	Employee(String name, String role, Manager manager) {
 
