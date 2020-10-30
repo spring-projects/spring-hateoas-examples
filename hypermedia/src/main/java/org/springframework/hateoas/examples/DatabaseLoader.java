@@ -15,11 +15,12 @@
  */
 package org.springframework.hateoas.examples;
 
-import java.util.Arrays;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * @author Greg Turnquist
@@ -49,7 +50,7 @@ class DatabaseLoader {
 
 			Employee sam = employeeRepository.save(new Employee("Sam", "gardener", saruman));
 
-			saruman.setEmployees(Arrays.asList(sam));
+			saruman.setEmployees(Collections.singletonList(sam));
 
 			managerRepository.save(saruman);
 		};

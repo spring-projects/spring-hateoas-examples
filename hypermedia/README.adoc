@@ -102,7 +102,7 @@ class Employee {
 }
 ----
 
-This is very similar to what you saw in *Basics*, except that now there is a 1-to-1 JPA relationship in the *manager* field.
+This is very similar to what you saw in *Basics*, except that now there is a 1-to-Many JPA relationship in the *manager* field.
 
 The constructor call has also been updated. Finally, the same stack overflow is blocked from this end by also putting a `@JsonIgnore`
 Jackson annotation on the *manager* field.
@@ -166,7 +166,7 @@ class ManagerController {
 }
 ----
 
-This controller should look familar, since it's almost identical to `EmployeeController` as seen in link:../api-evolution[API Evolution].
+This controller should look familiar, since it's almost identical to `EmployeeController` as seen in link:../api-evolution[API Evolution].
 You have simply swapped */employees* with */managers* and plugged in `ManagerRepository` and `ManagerResourceAssembler`.
 
 IMPORTANT: It's not a requirement to use a `ResourceAssembler`. But having one place to define all links for a given domain object
@@ -198,11 +198,17 @@ class EmployeeController {
 	 */
 	@GetMapping("/managers/{id}/employees")
 	public ResponseEntity<CollectionModel<EntityModel<Employee>>> findEmployees(@PathVariable long id) {
-		return ResponseEntity.ok(
-			assembler.toCollectionModel(repository.findByManagerId(id)));
+		CollectionModel<EntityModel<Employee>> collectionModel = assembler
+				.toCollectionModel(repository.findByManagerId(id));
+
+		Links newLinks = collectionModel.getLinks().merge(Links.MergeMode.REPLACE_BY_REL,
+				linkTo(methodOn(EmployeeController.class).findEmployees(id)).withSelfRel());
+
+		return ResponseEntity.ok(CollectionModel.of(collectionModel.getContent(), newLinks));
 	}
 }
 ----
+The replacement of the self link resolves a link:https://github.com/spring-projects/spring-hateoas-examples/issues/29[wrong self link issue]
 
 We've added another route, but how are we getting the data? Oh yeah, we need to add another finder!
 
@@ -259,8 +265,8 @@ method and invoking `super.addLinks()` in order to include those links. Then you
 IMPORTANT: You can either _add_ to the links defined by `SimpleIdentifiableRepresentationModelAssembler` as shown, or you can totally replace them by _not_
 invoking `super.addLinks()`. Your choice.
 
-There is a corresponding combination of a route/repository finder/assembler to allow an employee to find his or her manager. It's left as an exericise
-for you to discover it in `ManagerController`, `ManagerRepository`, and `EmployeeResourceAssembler`.
+There is a corresponding combination of a route/repository finder/assembler to allow an employee to find his or her manager. It's left as an exercise
+for you to discover it in `ManagerController`, `ManagerRepository`, and `EmployeeRepresentationModelAssembler`.
 
 == Augmenting Representations
 
@@ -268,7 +274,7 @@ Some critics of REST will point to certain toolkits or coded solutions and argue
 a relational set of tables that through 3NF (3rd Normal Form) split up data between a parent/child relationship. In essence, part of the data
 is in the parent table, part in the child table. The parent table's data is shown along with a link to navigate to the child table's data.
 
-This is a false comparison, because REST wholely supports merging data if it makes sense. In DDD, such items are referred to as *aggregates*.
+This is a false comparison, because REST wholly supports merging data if it makes sense. In DDD, such items are referred to as *aggregates*.
 Nothing about a REST resource is confined by the rules of 3NF, written forty years ago. That can simply be shortfall of certain
 toolkits (but not Spring HATEOAS!)
 
@@ -325,11 +331,11 @@ public ResponseEntity<CollectionModel<EntityModel<EmployeeWithManager>>> findAll
 @GetMapping("/employees/{id}/detailed")
 public ResponseEntity<EntityModel<EmployeeWithManager>> findDetailedEmployee(@PathVariable Long id) {
 
-	Employee employee = repository.findOne(id);
-
-	return ResponseEntity.ok(
-		employeeWithManagerResourceAssembler.toEntityModel(
-			new EmployeeWithManager(employee)));
+    return repository.findById(id) //
+            .map(EmployeeWithManager::new) //
+            .map(employeeWithManagerResourceAssembler::toModel) //
+            .map(ResponseEntity::ok) //
+            .orElse(ResponseEntity.notFound().build());
 }
 ----
 
@@ -430,7 +436,6 @@ In order to "start at the top" and hop, you must include a `RootController`:
 [source,java]
 ----
 @RestController
-@RestController
 class RootController {
 
 	@GetMapping("/")
@@ -448,7 +453,7 @@ class RootController {
 }
 ----
 
-Because there is no data at the top, just links, returning back a `ResourceSupport` is perfect. This allows defining all the top links.
+Because there is no data at the top, just links, returning back a `ResponseEntity<RepresentationModel>` is perfect. This allows defining all the top links.
 
 And it's easy to go into the various `ResourceAssemblers` and add a link back to the top as needed. It's up to you to see which
 bits of hypermedia serve such a link.
@@ -468,8 +473,7 @@ was gone, we can add a DTO to represent the old format based on `Manager` like t
 [source,java]
 ----
 /**
- * Legacy representation. Contains older format of data. Fewer links because hypermedia at the time was an after
- * thought.
+ * Legacy representation. Contains older format of data. Fewer links because hypermedia at the time was an afterthought.
  *
  * @author Greg Turnquist
  */
@@ -541,7 +545,7 @@ it leverages the `ManagerController`.
 Is that a good idea or a bad idea?
 
 Again, there are tradeoffs. This example is meant to illustrate other options. In this case, leveraging `ManagerController`
-allows all links to be generated courtesy of the `ManagerResourceAssembler`. When a `ResponseEntity<EntityModel<Manager>>` object
+allows all links to be generated courtesy of the `ManagerRepresentationModelAssembler`. When a `ResponseEntity<EntityModel<Manager>>` object
 is returned by the controller, its wrapped REST resource is extracted by Spring MVC's `getBody()` method.
 
 A new `Supervisor` REST resource is constructed by injecting the `Manager` into a `Supervisor` DTO. The provided links are

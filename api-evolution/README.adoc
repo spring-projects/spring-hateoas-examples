@@ -83,19 +83,19 @@ Start by adding a *root node* for clients to start from. The idea is to find rel
 [source,java]
 ----
 @GetMapping("/")
-public ResourceSupport root() {
+public RepresentationModel root() {
 
-	ResourceSupport rootResource = new ResourceSupport();
+    RepresentationModel rootResource = new RepresentationModel();
 
-	rootResource.add(
-		linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
-		linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+    rootResource.add( //
+            linkTo(methodOn(EmployeeController.class).root()).withSelfRel(), //
+            linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
 
-	return rootResource;
+    return rootResource;
 }
 ----
 
-Since the root node only needs to serve links, creating a bare `ResourceSupport` object is quite sufficient.
+Since the root node only needs to serve links, creating a bare `RepresentationModel` object is quite sufficient.
 
 * Add a link to `EmployeeController.root` for a proper *self* link
 * It also adds a link to `EmployeeController.findAll` and names it *employees*.
