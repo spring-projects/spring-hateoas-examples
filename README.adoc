@@ -22,3 +22,9 @@ We have separate folders for each of these:
 NOTE: The master branch tracks Spring HATEOAS 1.0, based upon Spring Boot 2 + Spring Framework 5.
 To see examples depicted against the 0.x branch (Spring 4.x) visit the https://github.com/spring-projects/spring-hateoas-examples/tree/0.x[0.x branch].
 
+== Community
+
+The Spring HATEOAS community has its own contributions when it comes to examples of building hypermedia.
+
+* https://github.com/ingogriebsch/spring-hateoas-siren-samples[Siren HATEOAS Examples] - The maintainer of the Siren extension of Spring HATEOAS has an extra set of examples.
+
