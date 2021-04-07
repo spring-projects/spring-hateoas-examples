@@ -1,6 +1,6 @@
 = Spring HATEOAS Examples
 
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-hateoas-examples%2Fmaster&subject=master[link=https://jenkins.spring.io/view/SpringHATEOAS/job/spring-hateoas-examples/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-hateoas-examples%2Fmain&subject=main[link=https://jenkins.spring.io/view/SpringHATEOAS/job/spring-hateoas-examples/]
 image:https://jenkins.spring.io/buildStatus/icon?job=spring-hateoas-examples%2F0.x&subject=0.x[link=https://jenkins.spring.io/view/SpringHATEOAS/job/spring-hateoas-examples/]
 
 This repository contains example projects to interact with Spring HATEOAS.
@@ -19,7 +19,7 @@ We have separate folders for each of these:
 * link:affordances[Affordances] - Create richer hypermedia controls using more complex hypermedia formats
 * link:spring-hateoas-and-spring-data-rest[Spring HATEOAS + Spring Data REST] - How to stir in custom links and logic with a Spring Data REST-based app
 
-NOTE: The master branch tracks Spring HATEOAS 1.0, based upon Spring Boot 2 + Spring Framework 5.
+NOTE: The main branch tracks Spring HATEOAS 1.0, based upon Spring Boot 2 + Spring Framework 5.
 To see examples depicted against the 0.x branch (Spring 4.x) visit the https://github.com/spring-projects/spring-hateoas-examples/tree/0.x[0.x branch].
 
 == Community
