@@ -15,17 +15,15 @@
  */
 package org.springframework.hateoas.examples;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Value;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 /**
- * Legacy representation. Contains older format of data. Fewer links because hypermedia at the time was an after
- * thought.
+ * Legacy representation. Contains older format of data. Fewer links because hypermedia at the time was an afterthought.
  *
  * @author Greg Turnquist
  */

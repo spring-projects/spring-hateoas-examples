@@ -83,19 +83,19 @@ Start by adding a *root node* for clients to start from. The idea is to find rel
 [source,java]
 ----
 @GetMapping("/")
-public ResourceSupport root() {
+public RepresentationModel root() {
 
-	ResourceSupport rootResource = new ResourceSupport();
+    RepresentationModel rootResource = new RepresentationModel();
 
-	rootResource.add(
-		linkTo(methodOn(EmployeeController.class).root()).withSelfRel(),
-		linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
+    rootResource.add( //
+            linkTo(methodOn(EmployeeController.class).root()).withSelfRel(), //
+            linkTo(methodOn(EmployeeController.class).findAll()).withRel("employees"));
 
-	return rootResource;
+    return rootResource;
 }
 ----
 
-Since the root node only needs to serve links, creating a bare `ResourceSupport` object is quite sufficient.
+Since the root node only needs to serve links, creating a bare `RepresentationModel` object is quite sufficient.
 
 * Add a link to `EmployeeController.root` for a proper *self* link
 * It also adds a link to `EmployeeController.findAll` and names it *employees*.
@@ -116,7 +116,7 @@ public ResponseEntity<EntityModel<Employee>> newEmployee(@RequestBody Employee e
 }
 ----
 
-This API can now process *PUT* requests, deserializing JSON found in the HTTP request body into an `Employee` record.
+This API can now process *POST* requests, deserializing JSON found in the HTTP request body into an `Employee` record.
 
 From there, it will save it using `EmployeeRepository.save`, getting back a record that includes the id.
 
@@ -274,7 +274,7 @@ It isn't necessary to post ALL of the Thymeleaf template `index.html`, but the c
 ----
 This shows the employee data being served up inside an HTML table.
 
-* `th:each="employee : ${employees}"` lets your iterate over each one.
+* `th:each="employee : ${employees}"` lets you iterate over each one.
 * `th:text="${employee.content.name}"` navigates the `EntityModel<Employee>` structure (remmeber, you're iterating over each entry of `CollectionModel<>`).
 * `${employee.links}` gives each entry access to a Spring HATEOAS `Link`.
 * `<a th:text="${link.rel}" th:href="${link.href}" />` lets you show the end user each link, both name and URI.

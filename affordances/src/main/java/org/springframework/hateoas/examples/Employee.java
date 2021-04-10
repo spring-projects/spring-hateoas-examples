@@ -38,7 +38,7 @@ import javax.persistence.Id;
  */
 @Data
 @Entity
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 class Employee {
 

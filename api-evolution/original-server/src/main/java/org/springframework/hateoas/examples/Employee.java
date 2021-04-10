@@ -29,7 +29,7 @@ import javax.persistence.Id;
  * @author Greg Turnquist
  */
 @Data
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 class Employee {
 
