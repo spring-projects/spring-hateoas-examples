@@ -36,6 +36,7 @@ public class SpringHateoasBasicsApplication {
 	 * 
 	 * @return
 	 */
+	// this is a test app
 	@Bean
 	EvoInflectorLinkRelationProvider relProvider() {
 		return new EvoInflectorLinkRelationProvider();
